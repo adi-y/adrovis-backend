@@ -17,5 +17,24 @@ logging:
     com.adrovis: DEBUG
     org.hibernate.SQL: DEBUG
 
-cors:
-  allowed-origins: http://localhost:3000
+app:
+  cors:
+    allowed-origins:
+      - http://localhost:3000
+
+  async:
+    core-pool-size: 2
+    max-pool-size: 5
+    queue-capacity: 100
+    await-termination-seconds: 30
+
+  api:
+    base-url: http://localhost:8080
+    environment-label: Development
+
+
+springdoc:
+  swagger-ui:
+    enabled: true
+  api-docs:
+    enabled: true

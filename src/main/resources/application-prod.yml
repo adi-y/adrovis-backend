@@ -13,5 +13,25 @@ logging:
   level:
     com.adrovis: WARN
 
-cors:
-  allowed-origins: ${FRONTEND_URL}
+app:
+  cors:
+    allowed-origins:
+      - https://adrovis.com
+      - https://www.adrovis.com
+
+  async:
+    core-pool-size: 4
+    max-pool-size: 10
+    queue-capacity: 200
+    await-termination-seconds: 30
+
+  api:
+    base-url: https://api.adrovis.com
+    environment-label: Production
+
+
+springdoc:
+  swagger-ui:
+    enabled: false
+  api-docs:
+    enabled: false
