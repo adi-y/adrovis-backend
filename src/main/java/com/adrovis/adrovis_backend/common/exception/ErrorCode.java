@@ -27,10 +27,32 @@ public enum ErrorCode {
     FILE_TOO_LARGE("ADV-413", "Uploaded file exceeds maximum allowed size", HttpStatus.PAYLOAD_TOO_LARGE),
     FILE_VALIDATION_FAILED("ADV-415", "Invalid file type or format", HttpStatus.UNSUPPORTED_MEDIA_TYPE),
 
-    // --- 500 / 502 (internal + external service failures) ---
-    INTERNAL_SERVER_ERROR("ADV-500", "Internal server error", HttpStatus.INTERNAL_SERVER_ERROR),
-    EMAIL_DISPATCH_FAILED("ADV-500-1", "Failed to send email notification", HttpStatus.INTERNAL_SERVER_ERROR),
-    EXTERNAL_SERVICE_FAILURE("ADV-502", "An external service (storage/email) is unavailable", HttpStatus.BAD_GATEWAY);
+    // --- 500 Internal Server Errors ---
+    INTERNAL_SERVER_ERROR(
+            "ADV-500",
+            "Internal server error",
+            HttpStatus.INTERNAL_SERVER_ERROR
+    ),
+
+    FILE_STORAGE_FAILED(
+            "ADV-500-1",
+            "Failed to store or retrieve file",
+            HttpStatus.INTERNAL_SERVER_ERROR
+    ),
+
+    EMAIL_DISPATCH_FAILED(
+            "ADV-500-2",
+            "Failed to send email notification",
+            HttpStatus.INTERNAL_SERVER_ERROR
+    ),
+
+    // --- 502 External Dependencies ---
+    EXTERNAL_SERVICE_FAILURE(
+            "ADV-502",
+            "An external service is unavailable",
+            HttpStatus.BAD_GATEWAY
+    );
+
 
     private final String code;
     private final String message;

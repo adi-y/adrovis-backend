@@ -22,3 +22,9 @@ server:
 logging:
   level:
     com.adrovis: INFO
+
+storage:
+  upload-dir: uploads
+  max-file-size: 5MB
+  allowed-types:
+    - application/pdf

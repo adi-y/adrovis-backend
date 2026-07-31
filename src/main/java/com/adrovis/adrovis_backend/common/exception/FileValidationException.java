@@ -22,8 +22,7 @@ public class FileValidationException extends AppException {
 
     /**
      * Use when a specific request field caused the validation failure.
-     * Example:
-     * resume -> Only PDF or DOCX files are allowed.
+     * Example:     * resume -> Only PDF or DOCX files are allowed.
      */
     public FileValidationException(
             String message,
