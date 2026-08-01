@@ -16,8 +16,8 @@ import java.time.Instant;
         name = "application",
         indexes = {
                 @Index(name = "idx_application_job_id", columnList = "job_id"),
-                @Index(name = "idx_application_status", columnList = "applicationStatus"),
-                @Index(name = "idx_application_email", columnList = "applicantEmail")
+                @Index(name = "idx_application_status", columnList = "application_status"),
+                @Index(name = "idx_application_email", columnList = "applicant_email")
         }
 )
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

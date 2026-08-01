@@ -1,43 +1,43 @@
-package com.adrovis.adrovis_backend.config;
+    package com.adrovis.adrovis_backend.config;
 
-import org.springframework.web.filter.CorsFilter;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+    import org.springframework.web.filter.CorsFilter;
+    import org.springframework.beans.factory.annotation.Value;
+    import org.springframework.context.annotation.Bean;
+    import org.springframework.context.annotation.Configuration;
+    import org.springframework.web.cors.CorsConfiguration;
+    import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.List;
+    import java.util.List;
 
-@Configuration
-public class CorsConfig {
+    @Configuration
+    public class CorsConfig {
 
-    @Value("${app.cors.allowed-origins}")
-    private List<String> allowedOrigins;
+        private final CorsProperties corsProperties;
 
-    @Bean
-    public CorsFilter corsFilter(){
-        CorsConfiguration configuration = new CorsConfiguration();
+        public CorsConfig(CorsProperties corsProperties) {
+            this.corsProperties = corsProperties;
+        }
 
-        configuration.setAllowedOrigins(allowedOrigins);
-        configuration.setAllowedMethods(List.of(
-                "GET",
-                "POST",
-                "PUT",
-                "DELETE",
-                "PATCH",
-                "OPTIONS"
-        ));
+        @Bean
+        public CorsFilter corsFilter() {
 
-        configuration.setAllowedHeaders(List.of("*"));
-        configuration.setAllowCredentials(true);
-        configuration.setMaxAge(3600L);
+            CorsConfiguration configuration = new CorsConfiguration();
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+            configuration.setAllowedOrigins(corsProperties.getAllowedOrigins());
 
-        source.registerCorsConfiguration("/**", configuration);
+            configuration.setAllowedMethods(List.of(
+                    "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"
+            ));
 
-        return new CorsFilter(source);
+            configuration.setAllowedHeaders(List.of("*"));
+            configuration.setAllowCredentials(true);
+            configuration.setMaxAge(3600L);
+
+            UrlBasedCorsConfigurationSource source =
+                    new UrlBasedCorsConfigurationSource();
+
+            source.registerCorsConfiguration("/**", configuration);
+
+            return new CorsFilter(source);
+        }
     }
-
-}

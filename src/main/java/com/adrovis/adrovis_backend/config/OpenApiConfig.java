@@ -21,23 +21,25 @@ public class OpenApiConfig {
     private String environmentLabel;
 
     @Bean
-    public OpenAPI adrovisOpenAPI(){
+    public OpenAPI adrovisOpenAPI() {
+
         return new OpenAPI()
                 .info(new Info()
                         .title("Adrovis Backend API")
-                        .version("1.0.0")
-                        .description("REST API documentation for the Adrovis backend("+ environmentLabel +")")
+                        .description(
+                                "REST API documentation for the Adrovis backend (%s)"
+                                        .formatted(environmentLabel)
+                        )
+                        .termsOfService("Internal use only")
                         .contact(new Contact()
                                 .name("Adrovis Engineering")
                                 .email("engineering@adrovis.com"))
                         .license(new License()
-                                .name("PVT LTD")))
+                                .name("Proprietary")))
                 .servers(List.of(
-                        new Server().url(baseUrl)
-                                .description(environmentLabel + " server")
+                        new Server()
+                                .url(baseUrl)
+                                .description(environmentLabel + " Server")
                 ));
-
-
-
     }
 }
