@@ -11,6 +11,7 @@ import com.adrovis.adrovis_backend.career.mapper.ApplicationMapper;
 import com.adrovis.adrovis_backend.career.repository.ApplicationRepository;
 import com.adrovis.adrovis_backend.career.repository.JobRepository;
 import com.adrovis.adrovis_backend.career.service.ApplicationService;
+import com.adrovis.adrovis_backend.common.entity.ApplicationIdGenerator;
 import com.adrovis.adrovis_backend.common.exception.DuplicateResourceException;
 import com.adrovis.adrovis_backend.common.exception.ResourceNotFoundException;
 import com.adrovis.adrovis_backend.storage.dto.response.FileUploadResponse;
@@ -34,6 +35,7 @@ public class ApplicationServiceImpl implements ApplicationService {
     private final JobRepository jobRepository;
     private final ApplicationMapper applicationMapper;
     private final FileStorageService fileStorageService;
+    private final ApplicationIdGenerator idGenerator;
 
     @Override
     @Transactional
@@ -53,15 +55,28 @@ public class ApplicationServiceImpl implements ApplicationService {
                 fileStorageService.upload(resume);
 
         Application application = new Application(
+                idGenerator.next(),                       // applicationId
                 job,
-                request.applicationType(),
+                ApplicationType.JOB,
                 ApplicationStatus.SUBMITTED,
+                job.getTitle(),                           // snapshot
+
                 request.applicantName(),
                 request.applicantEmail(),
                 request.applicantPhone(),
+
+                null,                                    // college
+                null,                                    // graduationYear
+
                 uploadedResume.storageKey(),
                 uploadedResume.fileUrl(),
-                request.coverLetter(),
+                uploadedResume.originalName(),
+                uploadedResume.mimeType(),
+                uploadedResume.sizeBytes(),
+
+                request.coverLetter(),                   // note
+
+                true,                                    // consent
                 Instant.now()
         );
 

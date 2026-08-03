@@ -4,7 +4,13 @@ public record FileUploadResponse(
 
         String storageKey,
 
-        String fileUrl
+        String fileUrl,
+
+        String originalName,
+
+        String mimeType,
+
+        Long sizeBytes
 
 ) {
 }

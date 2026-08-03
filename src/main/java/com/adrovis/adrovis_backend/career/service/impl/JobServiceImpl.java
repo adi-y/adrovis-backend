@@ -79,7 +79,6 @@ public class JobServiceImpl implements JobService {
     }
 
     private Job findJobById(UUID jobId) {
-
         return jobRepository.findById(jobId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(

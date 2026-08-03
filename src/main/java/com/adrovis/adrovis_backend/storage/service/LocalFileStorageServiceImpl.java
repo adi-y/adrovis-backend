@@ -76,7 +76,10 @@ public class LocalFileStorageServiceImpl implements FileStorageService {
 
             return new FileUploadResponse(
                     storageKey,
-                    fileUrl
+                    fileUrl,
+                    originalFilename,
+                    file.getContentType(),
+                    file.getSize()
             );
 
         } catch (IOException ex) {
