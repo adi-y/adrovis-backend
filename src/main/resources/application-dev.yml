@@ -4,11 +4,18 @@ spring:
     username: root
     password: yadav1
 
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
 
   mail:
     host: smtp.zoho.in
     port: 587
-    username: aditya.yadav@adrovis.com
+    username: aditya.yadav=@adrovis.com
     password: ZveJXvfuMuz3
 
     properties:
@@ -17,19 +24,6 @@ spring:
           auth: true
           starttls:
             enable: true
-
-  app:
-    mail:
-      from: hello@adrovis.com
-
-
-  jpa:
-    show-sql: true
-    hibernate:
-      ddl-auto: validate
-    properties:
-      hibernate:
-        format_sql: true
 
 logging:
   level:
@@ -53,7 +47,6 @@ app:
   api:
     base-url: http://localhost:8080
     environment-label: Development
-
 
 springdoc:
   swagger-ui:

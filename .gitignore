@@ -1,25 +1,69 @@
-HELP.md
+#############################
+# Maven
+#############################
+
 target/
-.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-### STS ###
-.apt_generated
+.mvn/wrapper/maven-wrapper.jar
+
+#############################
+# Spring Boot
+#############################
+
+HELP.md
+*.log
+logs/
+
+#############################
+# Local File Uploads
+#############################
+
+uploads/
+storage/
+tmp/
+
+#############################
+# Environment Files
+#############################
+
+.env
+.env.*
+!.env.example
+
+#############################
+# IntelliJ IDEA
+#############################
+
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+#############################
+# VS Code
+#############################
+
+.vscode/
+
+#############################
+# Eclipse / STS
+#############################
+
+.apt_generated/
 .classpath
 .factorypath
 .project
-.settings
+.settings/
 .springBeans
-.sts4-cache
+.sts4-cache/
 
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
+#############################
+# NetBeans
+#############################
 
-### NetBeans ###
 /nbproject/private/
 /nbbuild/
 /dist/
@@ -29,5 +73,28 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-### VS Code ###
-.vscode/
+#############################
+# macOS
+#############################
+
+.DS_Store
+
+#############################
+# Windows
+#############################
+
+Thumbs.db
+Desktop.ini
+
+#############################
+# Linux
+#############################
+
+*~
+
+#############################
+# Misc
+#############################
+
+*.swp
+*.swo
