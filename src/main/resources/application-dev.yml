@@ -15,7 +15,7 @@ spring:
   mail:
     host: smtp.zoho.in
     port: 587
-    username: aditya.yadav=@adrovis.com
+    username: aditya.yadav@adrovis.com
     password: ZveJXvfuMuz3
 
     properties:
