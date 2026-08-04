@@ -22,7 +22,10 @@ server:
 
 logging:
   level:
+    root: INFO
     com.adrovis: INFO
+    org.springframework.web: WARN
+    org.hibernate.SQL: WARN
 
 storage:
   upload-dir: uploads
@@ -35,4 +38,3 @@ app:
     allowed-origins:
       - http://localhost:3000
 
-debug: true
