@@ -17,6 +17,8 @@ public interface ApplicationRepository extends JpaRepository<Application, UUID> 
 
     Optional<Application> findByApplicationId(String applicationId);
 
+    Optional<Application> findTopByOrderByApplicationIdDesc();
+
     boolean existsByApplicantEmailIgnoreCaseAndJob(
             String applicantEmail,
             Job job

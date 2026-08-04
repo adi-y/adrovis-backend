@@ -4,6 +4,25 @@ spring:
     username: root
     password: yadav1
 
+
+  mail:
+    host: smtp.zoho.in
+    port: 587
+    username: aditya.yadav@adrovis.com
+    password: ZveJXvfuMuz3
+
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+  app:
+    mail:
+      from: hello@adrovis.com
+
+
   jpa:
     show-sql: true
     hibernate:
@@ -27,6 +46,9 @@ app:
     max-pool-size: 5
     queue-capacity: 100
     await-termination-seconds: 30
+
+  mail:
+    from: aditya.yadav@adrovis.com
 
   api:
     base-url: http://localhost:8080

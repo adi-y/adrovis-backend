@@ -24,7 +24,7 @@ public record ApplicationResponse(
 
         String resumeUrl,
 
-        String coverLetter,
+        String note,
 
         Instant submittedAt,
 

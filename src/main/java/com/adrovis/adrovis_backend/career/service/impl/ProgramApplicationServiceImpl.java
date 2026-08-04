@@ -11,7 +11,8 @@ import com.adrovis.adrovis_backend.career.repository.ApplicationRepository;
 import com.adrovis.adrovis_backend.career.service.ProgramApplicationService;
 import com.adrovis.adrovis_backend.common.exception.AppException;
 import com.adrovis.adrovis_backend.common.entity.ApplicationIdGenerator;
-//import com.adrovis.adrovis_backend.email.EmailService;
+
+import com.adrovis.adrovis_backend.email.service.EmailService;
 import com.adrovis.adrovis_backend.storage.dto.response.FileUploadResponse;
 import com.adrovis.adrovis_backend.storage.service.FileStorageService;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +30,7 @@ public class ProgramApplicationServiceImpl implements ProgramApplicationService 
     private final FileStorageService fileStorageService;
     private final ApplicationIdGenerator idGenerator;
     private final ApplicationMapper applicationMapper;
-    //private final EmailService emailService;
+    private final EmailService emailService;
 
     @Override
     @Transactional
@@ -74,6 +75,6 @@ public class ProgramApplicationServiceImpl implements ProgramApplicationService 
         // this guard exists for defense-in-depth, not because @Valid could miss it.
         application.submitProgramApplication();
 
-        //emailService.sendApplicationReceivedEmailAsync(application);
+        emailService.sendApplicationReceivedEmailAsync(application);
     }
 }
