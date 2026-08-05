@@ -1,5 +1,5 @@
 CREATE TABLE job (
-    id BINARY(16) NOT NULL,
+    id UUID NOT NULL,
 
     title VARCHAR(255) NOT NULL,
     description TEXT NOT NULL,
@@ -8,23 +8,20 @@ CREATE TABLE job (
     employment_type VARCHAR(20) NOT NULL,
     status VARCHAR(20) NOT NULL,
 
-    created_at TIMESTAMP(6) NOT NULL,
-    updated_at TIMESTAMP(6) NOT NULL,
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL,
     version BIGINT NOT NULL,
 
     CONSTRAINT pk_job PRIMARY KEY (id)
-)
-ENGINE=InnoDB
-DEFAULT CHARSET=utf8mb4
-COLLATE=utf8mb4_unicode_ci;
+);
 
 CREATE INDEX idx_job_status
     ON job(status);
 
 CREATE TABLE application (
-    id BINARY(16) NOT NULL,
+    id UUID NOT NULL,
 
-    job_id BINARY(16),
+    job_id UUID,
 
     application_type VARCHAR(20) NOT NULL,
     application_status VARCHAR(20) NOT NULL,
@@ -38,10 +35,10 @@ CREATE TABLE application (
 
     cover_letter TEXT,
 
-    submitted_at TIMESTAMP(6) NOT NULL,
+    submitted_at TIMESTAMP NOT NULL,
 
-    created_at TIMESTAMP(6) NOT NULL,
-    updated_at TIMESTAMP(6) NOT NULL,
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL,
     version BIGINT NOT NULL,
 
     CONSTRAINT pk_application PRIMARY KEY (id),
@@ -50,11 +47,7 @@ CREATE TABLE application (
         FOREIGN KEY (job_id)
         REFERENCES job(id)
         ON DELETE RESTRICT
-        ON UPDATE RESTRICT
-)
-ENGINE=InnoDB
-DEFAULT CHARSET=utf8mb4
-COLLATE=utf8mb4_unicode_ci;
+);
 
 CREATE INDEX idx_application_job_id
     ON application(job_id);
