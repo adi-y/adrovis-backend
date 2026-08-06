@@ -3,7 +3,7 @@ spring:
     name: adrovis-backend
 
   profiles:
-    active: dev
+    active: prod
 
   servlet:
     multipart:
@@ -35,3 +35,8 @@ app:
   cors:
     allowed-origins:
       - http://localhost:3000
+
+supabase:
+  url: ${SUPABASE_URL}
+  service-key: ${SUPABASE_SERVICE_KEY}
+  bucket: ${SUPABASE_BUCKET}
