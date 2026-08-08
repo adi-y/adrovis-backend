@@ -35,6 +35,7 @@ app:
     allowed-origins:
       - https://adrovis.com
       - https://www.adrovis.com
+      - http://localhost:5173
 
   async:
     core-pool-size: 4
