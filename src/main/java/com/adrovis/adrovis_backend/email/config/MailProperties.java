@@ -10,5 +10,5 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class MailProperties {
 
     private String from;
-
+    private String apiKey;
 }

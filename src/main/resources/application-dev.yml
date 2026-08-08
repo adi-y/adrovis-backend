@@ -14,10 +14,11 @@ spring:
     open-in-view: false
 
   mail:
-    host: smtp.zoho.in
-    port: 587
-    username: aditya.yadav@adrovis.com
-    password: ZveJXvfuMuz3
+
+    #host: smtp.zoho.in
+    #port: 587
+    #username: aditya.yadav@adrovis.com
+    #password: ZveJXvfuMuz3
 
     properties:
       mail:
@@ -44,6 +45,7 @@ app:
 
   mail:
     from: aditya.yadav@adrovis.com
+    api-key: ${RESEND_API_KEY}
 
   api:
     base-url: http://localhost:8080

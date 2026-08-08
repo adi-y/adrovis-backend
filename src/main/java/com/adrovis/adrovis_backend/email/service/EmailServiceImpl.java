@@ -2,14 +2,12 @@ package com.adrovis.adrovis_backend.email.service;
 
 import com.adrovis.adrovis_backend.career.entity.Application;
 import com.adrovis.adrovis_backend.email.config.MailProperties;
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
+import com.resend.Resend;
+import com.resend.core.exception.ResendException;
+import com.resend.services.emails.model.SendEmailRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.mail.MailException;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -21,41 +19,44 @@ import java.nio.charset.StandardCharsets;
 @Slf4j
 public class EmailServiceImpl implements EmailService {
 
-    private final JavaMailSender mailSender;
     private final MailProperties mailProperties;
+
     @Async("emailTaskExecutor")
     @Override
     public void sendApplicationReceivedEmailAsync(Application application) {
 
         try {
 
-            MimeMessage message = mailSender.createMimeMessage();
+            String html = buildApplicationReceivedTemplate(application);
 
-            MimeMessageHelper helper =
-                    new MimeMessageHelper(message, true, StandardCharsets.UTF_8.name());
+            Resend resend = new Resend(mailProperties.getApiKey());
 
+            SendEmailRequest request = SendEmailRequest.builder()
+                    .from("Adrovis <" + mailProperties.getFrom() + ">")
+                    .to(application.getApplicantEmail())
+                    .subject("Application Received - Adrovis")
+                    .html(html)
+                    .build();
 
-            helper.setFrom(mailProperties.getFrom());
-            helper.setTo(application.getApplicantEmail());
-            helper.setSubject("Application Received - Adrovis");
-
-            helper.setText(buildApplicationReceivedTemplate(application), true);
-
-            mailSender.send(message);
+            var response = resend.emails().send(request);
 
             log.info(
-                    "Application confirmation email sent successfully to {}",
-                    application.getApplicantEmail()
+                    "Application confirmation email sent successfully. " +
+                            "recipient={}, applicationId={}, resendId={}",
+                    application.getApplicantEmail(),
+                    application.getApplicationId(),
+                    response.getId()
             );
 
-        } catch (MailException | MessagingException | IOException ex) {
+        } catch (ResendException | IOException ex) {
 
             log.error(
-                    "Failed to send application confirmation email to {}",
+                    "Failed to send application confirmation email. " +
+                            "recipient={}, applicationId={}",
                     application.getApplicantEmail(),
+                    application.getApplicationId(),
                     ex
             );
-
         }
     }
 
