@@ -31,6 +31,10 @@ logging:
     org.springframework.web: WARN
 
 app:
+  # Added candidate portal base URL with environment variable override and local fallback
+  candidate-portal-base-url: ${CANDIDATE_PORTAL_BASE_URL:http://localhost:5173}
+  
+app:
   cors:
     allowed-origins:
       - https://adrovis.com
