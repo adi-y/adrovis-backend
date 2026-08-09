@@ -164,7 +164,7 @@ public class EmailServiceImpl implements EmailService {
             SendEmailRequest request = SendEmailRequest.builder()
                     .from("Adrovis <" + mailProperties.getFrom() + ">")
                     .to(application.getApplicantEmail())
-                    .subject("Share Your Availability - Adrovis")
+                    .subject("Interview Availability Requested - Adrovis")
                     .html(html)
                     .build();
 
@@ -362,11 +362,11 @@ public class EmailServiceImpl implements EmailService {
                 .replace("{{program}}", application.getJobTitleSnapshot());
     }
 
-    private String buildInterviewAvailabilityRequestTemplate(Application application)
+private String buildInterviewAvailabilityRequestTemplate(Application application)
             throws IOException {
 
         ClassPathResource resource =
-                new ClassPathResource("email/InterviewAvailabilityRequestEmail.html");
+                new ClassPathResource("email/ApplicationShortlistedEmail.html");
 
         String html = new String(
                 resource.getInputStream().readAllBytes(),
