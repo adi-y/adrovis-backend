@@ -148,7 +148,7 @@ public class ApplicationServiceImpl implements ApplicationService {
          */
         if (newStatus == ApplicationStatus.SHORTLISTED) {
 
-            //emailService.sendApplicationShortlistedEmailAsync(application);
+        
 
             interviewSchedulingService.ensureInterviewAndRequestAvailability(
                     application.getApplicationId()
