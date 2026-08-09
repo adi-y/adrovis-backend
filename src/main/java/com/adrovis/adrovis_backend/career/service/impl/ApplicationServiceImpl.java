@@ -14,6 +14,8 @@ import com.adrovis.adrovis_backend.career.service.ApplicationService;
 import com.adrovis.adrovis_backend.common.entity.ApplicationIdGenerator;
 import com.adrovis.adrovis_backend.common.exception.DuplicateResourceException;
 import com.adrovis.adrovis_backend.common.exception.ResourceNotFoundException;
+import com.adrovis.adrovis_backend.email.service.EmailService;
+import com.adrovis.adrovis_backend.interview.service.InterviewSchedulingService;
 import com.adrovis.adrovis_backend.storage.dto.response.FileUploadResponse;
 import com.adrovis.adrovis_backend.storage.service.FileStorageService;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +38,8 @@ public class ApplicationServiceImpl implements ApplicationService {
     private final ApplicationMapper applicationMapper;
     private final FileStorageService fileStorageService;
     private final ApplicationIdGenerator idGenerator;
+    private final EmailService emailService;
+    private final InterviewSchedulingService interviewSchedulingService;
 
     @Override
     @Transactional
@@ -55,18 +59,18 @@ public class ApplicationServiceImpl implements ApplicationService {
                 fileStorageService.upload(resume);
 
         Application application = new Application(
-                idGenerator.next(),                       // applicationId
+                idGenerator.next(),
                 job,
                 ApplicationType.JOB,
                 ApplicationStatus.SUBMITTED,
-                job.getTitle(),                           // snapshot
+                job.getTitle(),
 
                 request.applicantName(),
                 request.applicantEmail(),
                 request.applicantPhone(),
 
-                null,                                    // college
-                null,                                    // graduationYear
+                null,
+                null,
 
                 uploadedResume.storageKey(),
                 uploadedResume.fileUrl(),
@@ -74,9 +78,9 @@ public class ApplicationServiceImpl implements ApplicationService {
                 uploadedResume.mimeType(),
                 uploadedResume.sizeBytes(),
 
-                request.coverLetter(),                   // note
+                request.coverLetter(),
 
-                true,                                    // consent
+                true,
                 Instant.now()
         );
 
@@ -116,13 +120,44 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Override
     @Transactional
     public ApplicationResponse updateApplicationStatus(
-            UUID applicationId,
+            String applicationId,
             UpdateApplicationStatusRequest request
     ) {
 
-        Application application = findApplication(applicationId);
+        Application application = applicationRepository
+                .findByApplicationId(applicationId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Application not found with applicationId: "
+                                        + applicationId
+                        )
+                );
 
-        application.changeStatus(request.applicationStatus());
+        ApplicationStatus newStatus =
+                request.applicationStatus();
+
+        application.changeStatus(newStatus);
+
+        /*
+         * Send notification email based on the new application status.
+         *
+         * SUBMITTED email is already handled by
+         * ProgramApplicationServiceImpl when the applicant submits.
+         *
+         * Here we only handle admin status changes.
+         */
+        if (newStatus == ApplicationStatus.SHORTLISTED) {
+
+            emailService.sendApplicationShortlistedEmailAsync(application);
+
+            interviewSchedulingService.ensureInterviewAndRequestAvailability(
+                    application.getApplicationId()
+            );
+
+        } else if (newStatus == ApplicationStatus.REJECTED) {
+
+            emailService.sendApplicationRejectedEmailAsync(application);
+        }
 
         return applicationMapper.toResponse(application);
     }
