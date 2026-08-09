@@ -60,7 +60,7 @@ public class InterviewSchedulingServiceImpl implements InterviewSchedulingServic
         interview.setAvailabilityRequestedAt(OffsetDateTime.now());
         interviewRepository.save(interview);
 
-        emailService.sendInterviewAvailabilityRequestEmailAsync(application);
+        //emailService.sendInterviewAvailabilityRequestEmailAsync(application);
     }
 
     @Override
