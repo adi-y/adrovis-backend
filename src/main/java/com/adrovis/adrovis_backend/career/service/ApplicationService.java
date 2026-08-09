@@ -28,7 +28,7 @@ public interface ApplicationService {
     );
 
     ApplicationResponse updateApplicationStatus(
-            UUID applicationId,
+            String applicationId,
             UpdateApplicationStatusRequest request
     );
 

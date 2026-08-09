@@ -102,7 +102,7 @@ public class ApplicationController {
     @PatchMapping("/{applicationId}/status")
     public ResponseEntity<ApiResponse<ApplicationResponse>> updateStatus(
 
-            @PathVariable UUID applicationId,
+            @PathVariable String applicationId,
 
             @Valid
             @RequestBody
