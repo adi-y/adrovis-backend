@@ -8,6 +8,7 @@ import java.util.UUID;
 
 public record ApplicationResponse(
 
+        UUID id,
         String applicationId,
 
         UUID jobId,
