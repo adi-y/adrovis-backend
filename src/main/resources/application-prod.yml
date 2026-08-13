@@ -54,6 +54,20 @@ app:
     base-url: ${APP_BASE_URL}
     environment-label: Production
 
+  razorpay:
+    key-id: ${RAZORPAY_KEY_ID}
+    key-secret: ${RAZORPAY_KEY_SECRET}
+    webhook-secret: ${RAZORPAY_WEBHOOK_SECRET}
+    base-url: https://api.razorpay.com
+
+  payment:
+    amount-inr: ${PAYMENT_AMOUNT_INR:20}
+    currency: INR
+    expiry-hours: ${PAYMENT_EXPIRY_HOURS:72}
+    frontend-payment-success-url: ${PAYMENT_SUCCESS_URL:http://localhost:5173/payment/success}
+    frontend-payment-failure-url: ${PAYMENT_FAILURE_URL:http://localhost:5173/payment/failed}
+
+
 springdoc:
   swagger-ui:
     enabled: true
