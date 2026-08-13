@@ -3,6 +3,7 @@ package com.adrovis.adrovis_backend.email.service;
 import com.adrovis.adrovis_backend.career.entity.Application;
 import com.adrovis.adrovis_backend.email.config.MailProperties;
 import com.adrovis.adrovis_backend.interview.entity.Interview;
+import com.adrovis.adrovis_backend.payment.entity.PaymentTransaction;
 import com.resend.Resend;
 import com.resend.core.exception.ResendException;
 import com.resend.services.emails.model.SendEmailRequest;
@@ -73,6 +74,88 @@ public class EmailServiceImpl implements EmailService {
         }
     }
 
+    private String buildPaymentLinkTemplate(
+            Application application,
+            PaymentTransaction payment
+    ) throws IOException {
+
+        ClassPathResource resource =
+                new ClassPathResource(
+                        "email/PaymentLinkEmail.html"
+                );
+
+        String html =
+                new String(
+                        resource.getInputStream().readAllBytes(),
+                        StandardCharsets.UTF_8
+                );
+
+        return html
+                .replace(
+                        "{{name}}",
+                        application.getApplicantName()
+                )
+                .replace(
+                        "{{applicationId}}",
+                        application.getApplicationId()
+                )
+                .replace(
+                        "{{program}}",
+                        application.getJobTitleSnapshot()
+                )
+                .replace(
+                        "{{amount}}",
+                        String.valueOf(
+                                payment.getAmount() / 100
+                        )
+                )
+                .replace(
+                        "{{paymentLink}}",
+                        payment.getPaymentLinkUrl()
+                );
+    }
+
+    private String buildPaymentSuccessTemplate(
+            Application application,
+            PaymentTransaction payment
+    ) throws IOException {
+
+        ClassPathResource resource =
+                new ClassPathResource(
+                        "email/PaymentSuccessEmail.html"
+                );
+
+        String html =
+                new String(
+                        resource.getInputStream().readAllBytes(),
+                        StandardCharsets.UTF_8
+                );
+
+        return html
+                .replace(
+                        "{{name}}",
+                        application.getApplicantName()
+                )
+                .replace(
+                        "{{applicationId}}",
+                        application.getApplicationId()
+                )
+                .replace(
+                        "{{program}}",
+                        application.getJobTitleSnapshot()
+                )
+                .replace(
+                        "{{paymentId}}",
+                        payment.getRazorpayPaymentId()
+                )
+                .replace(
+                        "{{amount}}",
+                        String.valueOf(
+                                payment.getAmount() / 100
+                        )
+                );
+    }
+
     @Async("emailTaskExecutor")
     @Override
     public void sendApplicationShortlistedEmailAsync(Application application) {
@@ -105,6 +188,117 @@ public class EmailServiceImpl implements EmailService {
             log.error(
                     "Failed to send application shortlisted email. " +
                             "recipient={}, applicationId={}",
+                    application.getApplicantEmail(),
+                    application.getApplicationId(),
+                    ex
+            );
+        }
+    }
+    @Async("emailTaskExecutor")
+    @Override
+    public void sendPaymentLinkEmailAsync(
+            Application application,
+            PaymentTransaction payment
+    ) {
+
+        try {
+
+            String html =
+                    buildPaymentLinkTemplate(
+                            application,
+                            payment
+                    );
+
+            Resend resend =
+                    new Resend(
+                            mailProperties.getApiKey()
+                    );
+
+            SendEmailRequest request =
+                    SendEmailRequest.builder()
+                            .from(
+                                    "Adrovis <"
+                                            + mailProperties.getFrom()
+                                            + ">"
+                            )
+                            .to(application.getApplicantEmail())
+                            .subject(
+                                    "Internship Selection Confirmation - Adrovis"
+                            )
+                            .html(html)
+                            .build();
+
+            var response =
+                    resend.emails().send(request);
+
+            log.info(
+                    "Payment link email sent successfully. " +
+                            "recipient={}, applicationId={}, paymentReference={}, resendId={}",
+                    application.getApplicantEmail(),
+                    application.getApplicationId(),
+                    payment.getReferenceId(),
+                    response.getId()
+            );
+
+        } catch (ResendException | IOException ex) {
+
+            log.error(
+                    "Failed to send payment link email. " +
+                            "recipient={}, applicationId={}, paymentReference={}",
+                    application.getApplicantEmail(),
+                    application.getApplicationId(),
+                    payment.getReferenceId(),
+                    ex
+            );
+        }
+    }
+
+    @Async("emailTaskExecutor")
+    @Override
+    public void sendPaymentSuccessEmailAsync(
+            Application application,
+            PaymentTransaction payment
+    ) {
+
+        try {
+
+            String html =
+                    buildPaymentSuccessTemplate(
+                            application,
+                            payment
+                    );
+
+            Resend resend =
+                    new Resend(
+                            mailProperties.getApiKey()
+                    );
+
+            SendEmailRequest request =
+                    SendEmailRequest.builder()
+                            .from(
+                                    "Adrovis <"
+                                            + mailProperties.getFrom()
+                                            + ">"
+                            )
+                            .to(application.getApplicantEmail())
+                            .subject("Welcome to Adrovis")
+                            .html(html)
+                            .build();
+
+            var response =
+                    resend.emails().send(request);
+
+            log.info(
+                    "Payment confirmation email sent. recipient={}, applicationId={}, resendId={}",
+                    application.getApplicantEmail(),
+                    application.getApplicationId(),
+                    response.getId()
+            );
+
+        } catch (ResendException | IOException ex) {
+
+            log.error(
+                    "Failed to send payment confirmation email. recipient={}, applicationId={}",
                     application.getApplicantEmail(),
                     application.getApplicationId(),
                     ex
