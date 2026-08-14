@@ -556,25 +556,43 @@ public class EmailServiceImpl implements EmailService {
                 .replace("{{program}}", application.getJobTitleSnapshot());
     }
 
-private String buildInterviewAvailabilityRequestTemplate(Application application)
-            throws IOException {
+    private String buildInterviewAvailabilityRequestTemplate(
+            Application application
+    ) throws IOException {
 
         ClassPathResource resource =
-                new ClassPathResource("email/ApplicationShortlistedEmail.html");
+                new ClassPathResource(
+                        "email/InterviewAvailabilityEmail.html"
+                );
 
         String html = new String(
                 resource.getInputStream().readAllBytes(),
                 StandardCharsets.UTF_8
         );
 
-        String availabilityLink = candidatePortalBaseUrl
-                + "/applications/" + application.getApplicationId() + "/availability";
+        String availabilityLink =
+                candidatePortalBaseUrl
+                        + "/applications/"
+                        + application.getApplicationId()
+                        + "/availability";
 
         return html
-                .replace("{{name}}", application.getApplicantName())
-                .replace("{{applicationId}}", application.getApplicationId())
-                .replace("{{program}}", application.getJobTitleSnapshot())
-                .replace("{{availabilityLink}}", availabilityLink);
+                .replace(
+                        "{{applicantName}}",
+                        application.getApplicantName()
+                )
+                .replace(
+                        "{{jobTitle}}",
+                        application.getJobTitleSnapshot()
+                )
+                .replace(
+                        "{{applicationId}}",
+                        application.getApplicationId()
+                )
+                .replace(
+                        "{{availabilityLink}}",
+                        availabilityLink
+                );
     }
 
     private String buildInterviewScheduledTemplate(Application application, Interview interview)
