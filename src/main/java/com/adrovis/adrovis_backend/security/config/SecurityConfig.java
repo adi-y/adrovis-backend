@@ -8,7 +8,10 @@ import com.adrovis.adrovis_backend.security.repository.AdminUserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
@@ -17,43 +20,52 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
+import java.util.List;
 
 @Configuration
+@EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final AdminUserRepository adminUserRepository;
-
     private final JwtAuthenticationEntryPoint authenticationEntryPoint;
     private final JwtAccessDeniedHandler accessDeniedHandler;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(
-            HttpSecurity http
-    ) throws Exception {
-
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                // 1. MUST BE ENABLED for Spring Security to process CORS headers
+                .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
-
                 .sessionManagement(session ->
-                        session.sessionCreationPolicy(
-                                SessionCreationPolicy.STATELESS
-                        )
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-
                 .authorizeHttpRequests(auth -> auth
+                        // 2. Allow all browser preflight OPTIONS requests unconditionally
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
                         // Public authentication APIs
-                        .requestMatchers(
-                                "/api/v1/auth/**"
-                        ).permitAll()
+                        .requestMatchers("/api/v1/auth/**").permitAll()
 
-                        // Public API documentation
+                        // Public documentation & health checks
                         .requestMatchers(
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
-                                "/v3/api-docs/**"
+                                "/v3/api-docs/**",
+                                "/api/health"
+                        ).permitAll()
+
+                        // Public Webhooks & Candidate Links
+                        .requestMatchers(
+                                "/api/v1/webhooks/**",
+                                "/api/v1/applications/*/availability",
+                                "/api/v1/applications/*/interview"
                         ).permitAll()
 
                         // Protected admin APIs
@@ -66,7 +78,6 @@ public class SecurityConfig {
                                 "/api/v1/applications/status/{status}",
                                 "/api/v1/applications/job/{jobId}",
                                 "/api/v1/applications/{applicationId}/interview",
-                                "/api/v1/webhooks/razorpay",
                                 "/api/v1/admin/interviews/{applicationId}/schedule",
                                 "/api/v1/admin/interviews/{applicationId}/request-availability",
                                 "/api/v1/admin/interviews/{applicationId}/reschedule",
@@ -82,18 +93,10 @@ public class SecurityConfig {
                         // Everything else remains public
                         .anyRequest().permitAll()
                 )
-
-                // REST authentication/authorization error handling
                 .exceptionHandling(exception -> exception
-                        .authenticationEntryPoint(
-                                authenticationEntryPoint
-                        )
-                        .accessDeniedHandler(
-                                accessDeniedHandler
-                        )
+                        .authenticationEntryPoint(authenticationEntryPoint)
+                        .accessDeniedHandler(accessDeniedHandler)
                 )
-
-                // JWT authentication
                 .addFilterBefore(
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class
@@ -103,23 +106,51 @@ public class SecurityConfig {
     }
 
     @Bean
-    public UserDetailsService userDetailsService() {
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        
+        // Allowed origins for local dev and production
+        configuration.setAllowedOriginPatterns(List.of(
+                "http://localhost:*",
+                "http://127.0.0.1:*",
+                "https://*.onrender.com",
+                "https://adrovis.com",
+                "https://www.adrovis.com"
+        ));
+        
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList(
+                "Authorization",
+                "Content-Type",
+                "X-Requested-With",
+                "Accept",
+                "Origin",
+                "Access-Control-Request-Method",
+                "Access-Control-Request-Headers",
+                "X-Razorpay-Signature",
+                "x-razorpay-event-id"
+        ));
+        configuration.setExposedHeaders(Arrays.asList("Authorization", "Content-Disposition"));
+        configuration.setAllowCredentials(true);
+        configuration.setMaxAge(3600L);
 
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
+
+    @Bean
+    public UserDetailsService userDetailsService() {
         return username ->
                 adminUserRepository
                         .findByEmailIgnoreCase(username)
                         .map(this::toUserDetails)
                         .orElseThrow(() ->
-                                new UsernameNotFoundException(
-                                        "Admin user not found."
-                                )
+                                new UsernameNotFoundException("Admin user not found.")
                         );
     }
 
-    private UserDetails toUserDetails(
-            AdminUser adminUser
-    ) {
-
+    private UserDetails toUserDetails(AdminUser adminUser) {
         return User.builder()
                 .username(adminUser.getEmail())
                 .password(adminUser.getPasswordHash())
