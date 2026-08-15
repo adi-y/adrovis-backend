@@ -16,8 +16,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+
+import com.adrovis.adrovis_backend.contact.enums.LeadStatus;
+import com.adrovis.adrovis_backend.contact.enums.LeadType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
+
+
 @RestController
-@RequestMapping("/api/v1/contact")
+@RequestMapping("/api/v1/admin/contact")
 @RequiredArgsConstructor
 @Validated
 @Tag(
@@ -107,6 +116,43 @@ public class ContactController {
                                 response
                         )
                 );
+    }
+
+    @GetMapping("/leads")
+    @Operation(
+            summary = "Get contact leads",
+            description = "Retrieves paginated contact leads for administrative use."
+    )
+    public ResponseEntity<ApiResponse<Page<LeadResponse>>> getLeads(
+
+            @RequestParam(required = false)
+            LeadType leadType,
+
+            @RequestParam(required = false)
+            LeadStatus status,
+
+            @PageableDefault(
+                    size = 20,
+                    sort = "createdAt",
+                    direction = Sort.Direction.DESC
+            )
+            Pageable pageable
+    ) {
+
+        Page<LeadResponse> leads =
+                contactService.getLeads(
+                        leadType,
+                        status,
+                        pageable
+                );
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        HttpStatus.OK,
+                        "Leads retrieved successfully.",
+                        leads
+                )
+        );
     }
 
 }

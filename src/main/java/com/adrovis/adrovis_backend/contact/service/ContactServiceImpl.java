@@ -4,11 +4,14 @@ import com.adrovis.adrovis_backend.contact.dto.request.CallbackRequest;
 import com.adrovis.adrovis_backend.contact.dto.request.ConsultationRequest;
 import com.adrovis.adrovis_backend.contact.dto.response.LeadResponse;
 import com.adrovis.adrovis_backend.contact.entity.Lead;
+import com.adrovis.adrovis_backend.contact.enums.LeadStatus;
 import com.adrovis.adrovis_backend.contact.enums.LeadType;
 import com.adrovis.adrovis_backend.contact.mapper.LeadMapper;
 import com.adrovis.adrovis_backend.contact.repository.LeadRepository;
 import com.adrovis.adrovis_backend.contact.service.ContactService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,6 +47,31 @@ public class ContactServiceImpl implements ContactService {
         Lead savedLead = leadRepository.save(lead);
 
         return leadMapper.toResponse(savedLead);
+    }
+
+    @Override
+    public Page<LeadResponse> getLeads(
+            LeadType leadType,
+            LeadStatus status,
+            Pageable pageable
+    ) {
+
+        Page<Lead> leads;
+
+        if (leadType != null && status != null) {
+
+            leads = leadRepository.findByLeadTypeAndStatus(
+                    leadType,
+                    status,
+                    pageable
+            );
+
+        } else {
+
+            leads = leadRepository.findAll(pageable);
+        }
+
+        return leads.map(leadMapper::toResponse);
     }
 
 }

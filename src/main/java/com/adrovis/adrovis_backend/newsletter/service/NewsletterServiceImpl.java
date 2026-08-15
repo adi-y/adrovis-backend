@@ -1,7 +1,8 @@
 package com.adrovis.adrovis_backend.newsletter.service;
 
-import com.adrovis.adrovis_backend.newsletter.dto.request.NewsletterSubscribeRequest;
-import com.adrovis.adrovis_backend.newsletter.dto.response.NewsletterSubscribeResponse;
+import com.adrovis.adrovis_backend.common.exception.ResourceNotFoundException;
+import com.adrovis.adrovis_backend.newsletter.dto.NewsletterSubscribeRequest;
+import com.adrovis.adrovis_backend.newsletter.dto.NewsletterSubscribeResponse;
 import com.adrovis.adrovis_backend.newsletter.entity.NewsletterSubscriber;
 import com.adrovis.adrovis_backend.newsletter.enums.NewsletterSubscriberStatus;
 import com.adrovis.adrovis_backend.newsletter.repository.NewsletterSubscriberRepository;
@@ -11,7 +12,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -61,6 +64,49 @@ public class NewsletterServiceImpl implements NewsletterService {
         return NewsletterSubscribeResponse.builder()
                 .email(subscriber.getEmail())
                 .status(subscriber.getStatus())
+                .build();
+    }
+    @Override
+    @Transactional(readOnly = true)
+    public List<NewsletterSubscribeResponse> getAllSubscribers() {
+
+        return newsletterSubscriberRepository
+                .findAll()
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public NewsletterSubscribeResponse getSubscriberById(
+            UUID subscriberId
+    ) {
+
+        NewsletterSubscriber subscriber =
+                newsletterSubscriberRepository
+                        .findById(subscriberId)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Newsletter subscriber not found."
+                                )
+                        );
+
+        return toResponse(subscriber);
+    }
+
+    private NewsletterSubscribeResponse toResponse(
+            NewsletterSubscriber subscriber
+    ) {
+
+        return NewsletterSubscribeResponse.builder()
+                .id(subscriber.getId())
+                .email(subscriber.getEmail())
+                .status(subscriber.getStatus())
+                .subscribedAt(subscriber.getSubscribedAt())
+                .unsubscribedAt(subscriber.getUnsubscribedAt())
+                .createdAt(subscriber.getCreatedAt())
+                .updatedAt(subscriber.getUpdatedAt())
                 .build();
     }
 }

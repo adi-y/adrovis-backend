@@ -40,3 +40,12 @@ supabase:
   url: ${SUPABASE_URL}
   service-key: ${SUPABASE_SERVICE_KEY}
   bucket: ${SUPABASE_BUCKET}
+
+security:
+  jwt:
+    secret: ${JWT_SECRET}
+    expiration: ${JWT_EXPIRATION:3600000}
+
+  admin:
+    email: ${ADMIN_EMAIL}
+    password: ${ADMIN_PASSWORD}
