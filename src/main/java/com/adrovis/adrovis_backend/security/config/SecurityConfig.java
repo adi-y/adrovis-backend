@@ -59,7 +59,24 @@ public class SecurityConfig {
                         // Protected admin APIs
                         .requestMatchers(
 
-                                "/api/v1/contact/leads"
+                                "/api/v1/contact/leads",
+                                "/api/v1/admin/payments/applications/{applicationId}/link",
+                                "/api/v1/admin/payments/applications/{applicationId}",
+                                "/api/v1/applications/{applicationId}",
+                                "/api/v1/applications/status/{status}",
+                                "/api/v1/applications/job/{jobId}",
+                                "/api/v1/applications/{applicationId}/interview",
+                                "/api/v1/webhooks/razorpay",
+                                "/api/v1/admin/interviews/{applicationId}/schedule",
+                                "/api/v1/admin/interviews/{applicationId}/request-availability",
+                                "/api/v1/admin/interviews/{applicationId}/reschedule",
+                                "/api/v1/admin/interviews/{applicationId}/outcome",
+                                "/api/v1/admin/interviews/{applicationId}/cancel",
+                                "/api/v1/admin/interviews",
+                                "/api/v1/admin/interviews/{applicationId}",
+                                "/api/v1/admin/newsletter/subscribers",
+                                "/api/v1/admin/newsletter/subscribers/{subscriberId}"
+
                         ).hasRole("ADMIN")
 
                         // Everything else remains public
