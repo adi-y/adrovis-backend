@@ -58,8 +58,8 @@ public class SecurityConfig {
 
                         // Protected admin APIs
                         .requestMatchers(
-                                "/api/v1/admin/**",
-                                "/api/v1/contact/admin/leads"
+
+                                "/api/v1/contact/leads"
                         ).hasRole("ADMIN")
 
                         // Everything else remains public
