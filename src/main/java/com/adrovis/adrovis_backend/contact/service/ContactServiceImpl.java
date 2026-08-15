@@ -26,26 +26,18 @@ public class ContactServiceImpl implements ContactService {
     @Override
     @Transactional
     public LeadResponse createCallbackLead(CallbackRequest request) {
-
         Lead lead = leadMapper.toCallbackLead(request);
-
         lead.initialize(LeadType.CALLBACK);
-
         Lead savedLead = leadRepository.save(lead);
-
         return leadMapper.toResponse(savedLead);
     }
 
     @Override
     @Transactional
     public LeadResponse createConsultationLead(ConsultationRequest request) {
-
         Lead lead = leadMapper.toConsultationLead(request);
-
         lead.initialize(LeadType.CONSULTATION);
-
         Lead savedLead = leadRepository.save(lead);
-
         return leadMapper.toResponse(savedLead);
     }
 
@@ -55,23 +47,18 @@ public class ContactServiceImpl implements ContactService {
             LeadStatus status,
             Pageable pageable
     ) {
-
         Page<Lead> leads;
 
         if (leadType != null && status != null) {
-
-            leads = leadRepository.findByLeadTypeAndStatus(
-                    leadType,
-                    status,
-                    pageable
-            );
-
+            leads = leadRepository.findByLeadTypeAndStatus(leadType, status, pageable);
+        } else if (leadType != null) {
+            leads = leadRepository.findByLeadType(leadType, pageable);
+        } else if (status != null) {
+            leads = leadRepository.findByStatus(status, pageable);
         } else {
-
             leads = leadRepository.findAll(pageable);
         }
 
         return leads.map(leadMapper::toResponse);
     }
-
 }
