@@ -26,7 +26,7 @@ import org.springframework.data.web.PageableDefault;
 
 
 @RestController
-@RequestMapping("/api/v1/admin/contact")
+@RequestMapping("/api/v1/contact")
 @RequiredArgsConstructor
 @Validated
 @Tag(
@@ -118,7 +118,7 @@ public class ContactController {
                 );
     }
 
-    @GetMapping("/leads")
+    @GetMapping("/admin/leads")
     @Operation(
             summary = "Get contact leads",
             description = "Retrieves paginated contact leads for administrative use."
