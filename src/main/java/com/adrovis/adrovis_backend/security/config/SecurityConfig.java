@@ -1,6 +1,8 @@
 package com.adrovis.adrovis_backend.security.config;
 
 import com.adrovis.adrovis_backend.security.entity.AdminUser;
+import com.adrovis.adrovis_backend.security.handler.JwtAccessDeniedHandler;
+import com.adrovis.adrovis_backend.security.handler.JwtAuthenticationEntryPoint;
 import com.adrovis.adrovis_backend.security.jwt.JwtAuthenticationFilter;
 import com.adrovis.adrovis_backend.security.repository.AdminUserRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +25,9 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final AdminUserRepository adminUserRepository;
 
+    private final JwtAuthenticationEntryPoint authenticationEntryPoint;
+    private final JwtAccessDeniedHandler accessDeniedHandler;
+
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http
@@ -39,23 +44,38 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
 
+                        // Public authentication APIs
                         .requestMatchers(
                                 "/api/v1/auth/**"
                         ).permitAll()
 
+                        // Public API documentation
                         .requestMatchers(
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**"
                         ).permitAll()
 
+                        // Protected admin APIs
                         .requestMatchers(
                                 "/api/v1/admin/**"
                         ).hasRole("ADMIN")
 
+                        // Everything else remains public
                         .anyRequest().permitAll()
                 )
 
+                // REST authentication/authorization error handling
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(
+                                authenticationEntryPoint
+                        )
+                        .accessDeniedHandler(
+                                accessDeniedHandler
+                        )
+                )
+
+                // JWT authentication
                 .addFilterBefore(
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class
@@ -78,7 +98,9 @@ public class SecurityConfig {
                         );
     }
 
-    private UserDetails toUserDetails(AdminUser adminUser) {
+    private UserDetails toUserDetails(
+            AdminUser adminUser
+    ) {
 
         return User.builder()
                 .username(adminUser.getEmail())
