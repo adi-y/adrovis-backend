@@ -1,0 +1,21 @@
+package com.adrovis.adrovis_backend.interview.dto.response;
+
+import com.adrovis.adrovis_backend.interview.enums.InterviewQuestionGenerationStatus;
+import lombok.Builder;
+import lombok.Getter;
+
+import java.util.List;
+import java.util.UUID;
+
+@Getter
+@Builder
+public class InterviewQuestionsResponse {
+
+    private UUID interviewId;
+
+    private InterviewQuestionGenerationStatus generationStatus;
+
+    private String generationError;
+
+    private List<InterviewQuestionResponse> questions;
+}

@@ -9,7 +9,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 @Service
 @Profile("prod")
 @Slf4j
@@ -54,6 +55,25 @@ public class SupabaseFileStorageServiceImpl extends AbstractFileStorageService {
     public void delete(String storageKey) {
 
         storageClient.delete(storageKey);
+    }
+
+    @Override
+    public Resource read(String storageKey) {
+
+        try {
+
+            byte[] content =
+                    storageClient.download(storageKey);
+
+            return new ByteArrayResource(content);
+
+        } catch (Exception ex) {
+
+            throw new FileStorageException(
+                    "Failed to read file from Supabase Storage.",
+                    ex
+            );
+        }
     }
 
 }

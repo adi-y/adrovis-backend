@@ -135,4 +135,51 @@ public class SupabaseStorageClient {
                 + "/"
                 + storagePath;
     }
+
+    public byte[] download(String storagePath) {
+
+        try {
+
+            return restClient.get()
+
+                    .uri(properties.getUrl()
+                            + "/storage/v1/object/"
+                            + properties.getBucket()
+                            + "/"
+                            + storagePath)
+
+                    .header("apikey", properties.getServiceKey())
+                    .header(
+                            "Authorization",
+                            "Bearer " + properties.getServiceKey()
+                    )
+
+                    .retrieve()
+
+                    .onStatus(
+                            HttpStatusCode::isError,
+                            (request, response) -> {
+
+                                throw new FileStorageException(
+                                        "Supabase download failed. HTTP "
+                                                + response.getStatusCode().value()
+                                );
+                            }
+                    )
+
+                    .body(byte[].class);
+
+        } catch (RestClientResponseException ex) {
+
+            log.error(
+                    "Supabase download failed: {}",
+                    ex.getResponseBodyAsString()
+            );
+
+            throw new FileStorageException(
+                    "Failed to download file from Supabase Storage.",
+                    ex
+            );
+        }
+    }
 }

@@ -4,6 +4,7 @@ import com.adrovis.adrovis_backend.common.exception.FileValidationException;
 import com.adrovis.adrovis_backend.config.StorageProperties;
 import com.adrovis.adrovis_backend.storage.dto.response.FileUploadResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.Resource;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -114,5 +115,4 @@ public abstract class AbstractFileStorageService
 
         return extension == null ? "" : "." + extension;
     }
-
 }

@@ -13,6 +13,7 @@ import com.adrovis.adrovis_backend.interview.entity.InterviewAvailabilitySlot;
 import com.adrovis.adrovis_backend.interview.entity.InterviewStatus;
 import com.adrovis.adrovis_backend.interview.repository.InterviewAvailabilitySlotRepository;
 import com.adrovis.adrovis_backend.interview.repository.InterviewRepository;
+import com.adrovis.adrovis_backend.interview.service.InterviewQuestionGenerationService;
 import com.adrovis.adrovis_backend.interview.service.InterviewSchedulingService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+
+
 @Service
 @RequiredArgsConstructor
 public class InterviewSchedulingServiceImpl implements InterviewSchedulingService {
@@ -43,6 +46,9 @@ public class InterviewSchedulingServiceImpl implements InterviewSchedulingServic
     private final InterviewAvailabilitySlotRepository slotRepository;
     private final ApplicationRepository applicationRepository;
     private final EmailService emailService;
+
+    private final InterviewQuestionGenerationService interviewQuestionGenerationService;
+
 
     @Override
     @Transactional
@@ -164,6 +170,7 @@ public class InterviewSchedulingServiceImpl implements InterviewSchedulingServic
         interview.setScheduledAt(OffsetDateTime.now());
         interviewRepository.save(interview);
 
+        interviewQuestionGenerationService.generateIfNeeded(interview.getId());
         emailService.sendInterviewScheduledEmailAsync(application, interview);
 
         return toResponse(application, interview);
