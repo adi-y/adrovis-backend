@@ -12,6 +12,12 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import com.adrovis.adrovis_backend.interview.enums.InterviewQuestionGenerationStatus;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 @Entity
 @Table(name = "interview")
 @Getter
@@ -55,6 +61,30 @@ public class Interview {
 
     @Column(name = "candidate_note", columnDefinition = "text")
     private String candidateNote;
+
+    // AI interview question generation
+    @Enumerated(EnumType.STRING)
+    @Column(name = "question_generation_status", nullable = false, length = 20)
+    @Builder.Default
+    private InterviewQuestionGenerationStatus questionGenerationStatus =
+            InterviewQuestionGenerationStatus.NOT_STARTED;
+
+    @Column(name = "question_generation_error", columnDefinition = "text")
+    private String questionGenerationError;
+
+    @Column(name = "question_generation_started_at")
+    private OffsetDateTime questionGenerationStartedAt;
+
+    @Column(name = "question_generation_completed_at")
+    private OffsetDateTime questionGenerationCompletedAt;
+
+    @Column(name = "question_generation_attempts", nullable = false)
+    @Builder.Default
+    private Integer questionGenerationAttempts = 0;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "ai_closing_pitch", columnDefinition = "jsonb")
+    private String aiClosingPitch;
 
     @Column(name = "availability_requested_at")
     private OffsetDateTime availabilityRequestedAt;

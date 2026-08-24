@@ -78,6 +78,8 @@ public class SecurityConfig {
                                 "/api/v1/applications/status/{status}",
                                 "/api/v1/applications/job/{jobId}",
                                 "/api/v1/applications/{applicationId}/interview",
+                                "/api/v1/admin/interviews/{applicationId}/questions",
+                                "/api/v1/webhooks/razorpay",
                                 "/api/v1/admin/interviews/{applicationId}/schedule",
                                 "/api/v1/admin/interviews/{applicationId}/request-availability",
                                 "/api/v1/admin/interviews/{applicationId}/reschedule",

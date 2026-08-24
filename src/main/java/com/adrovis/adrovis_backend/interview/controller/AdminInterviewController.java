@@ -1,8 +1,10 @@
 package com.adrovis.adrovis_backend.interview.controller;
 
 import com.adrovis.adrovis_backend.interview.dto.request.*;
+import com.adrovis.adrovis_backend.interview.dto.response.InterviewQuestionsResponse;
 import com.adrovis.adrovis_backend.interview.dto.response.InterviewResponse;
 import com.adrovis.adrovis_backend.interview.dto.response.InterviewSummaryResponse;
+import com.adrovis.adrovis_backend.interview.service.InterviewQuestionService;
 import com.adrovis.adrovis_backend.interview.service.InterviewSchedulingService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -20,10 +22,11 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/admin/interviews")
 @RequiredArgsConstructor
-@Tag(name = "Interview Scheduling (Admin)", description = "ADMIN/RECRUITER-only endpoints for reviewing availability and managing interviews. Not authenticated yet — secure /api/v1/admin/** when auth is added.")
+@Tag(name = "Interview Scheduling (Admin)", description = "ADMIN/RECRUITER-only endpoints for reviewing availability and managing interviews.")
 public class AdminInterviewController {
 
     private final InterviewSchedulingService interviewSchedulingService;
+    private final InterviewQuestionService interviewQuestionService;
 
     @GetMapping
     @Operation(summary = "List/filter interviews for the dashboard",
@@ -48,6 +51,18 @@ public class AdminInterviewController {
     public ResponseEntity<InterviewResponse> getInterview(
             @Parameter(example = "APP202600038") @PathVariable String applicationId) {
         return ResponseEntity.ok(interviewSchedulingService.getInterview(applicationId));
+    }
+
+    @GetMapping("/{applicationId}/questions")
+    @Operation(summary = "Get AI-generated interview questions and closing pitch",
+            description = "ADMIN — returns generation status, up to 15 questions, and the candidate-specific closing pitch once ready.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Questions/closing pitch returned (check generationStatus)"),
+            @ApiResponse(responseCode = "404", description = "No application or interview found")
+    })
+    public ResponseEntity<InterviewQuestionsResponse> getQuestions(
+            @Parameter(example = "APP202600038") @PathVariable String applicationId) {
+        return ResponseEntity.ok(interviewQuestionService.getQuestions(applicationId));
     }
 
     @PostMapping("/{applicationId}/schedule")
