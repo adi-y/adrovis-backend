@@ -12,7 +12,7 @@ import java.io.IOException;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 @Service
-@Profile("prod")
+@Profile({"dev", "prod"})
 @Slf4j
 public class SupabaseFileStorageServiceImpl extends AbstractFileStorageService {
 
@@ -61,16 +61,40 @@ public class SupabaseFileStorageServiceImpl extends AbstractFileStorageService {
     public Resource read(String storageKey) {
 
         try {
+            log.info(
+                    "Reading resume from Supabase Storage. storageKey={}",
+                    storageKey
+            );
 
-            byte[] content =
-                    storageClient.download(storageKey);
+            byte[] bytes = storageClient.download(storageKey);
 
-            return new ByteArrayResource(content);
+            if (bytes == null || bytes.length == 0) {
+                throw new FileStorageException(
+                        "Stored file is empty: " + storageKey
+                );
+            }
+
+            log.info(
+                    "Resume downloaded from Supabase successfully. storageKey={}, bytes={}",
+                    storageKey,
+                    bytes.length
+            );
+
+            return new ByteArrayResource(bytes);
+
+        } catch (FileStorageException ex) {
+            throw ex;
 
         } catch (Exception ex) {
 
+            log.error(
+                    "Failed to read resume from Supabase. storageKey={}",
+                    storageKey,
+                    ex
+            );
+
             throw new FileStorageException(
-                    "Failed to read file from Supabase Storage.",
+                    "Failed to read stored file from Supabase.",
                     ex
             );
         }

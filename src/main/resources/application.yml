@@ -36,11 +36,6 @@ app:
     allowed-origins:
       - http://localhost:3000
 
-supabase:
-  url: ${SUPABASE_URL}
-  service-key: ${SUPABASE_SERVICE_KEY}
-  bucket: ${SUPABASE_BUCKET}
-
 security:
   jwt:
     secret: ${JWT_SECRET}

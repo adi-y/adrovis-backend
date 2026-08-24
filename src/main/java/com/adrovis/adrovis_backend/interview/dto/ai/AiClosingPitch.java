@@ -1,8 +1,8 @@
-package com.adrovis.adrovis_backend.interview.dto.response;
+package com.adrovis.adrovis_backend.interview.dto.ai;
 
 import java.util.List;
 
-public record ClosingPitchResponse(
+public record AiClosingPitch(
         List<String> candidateStrengths,
         List<String> candidateGaps,
         String bestValueAngle,

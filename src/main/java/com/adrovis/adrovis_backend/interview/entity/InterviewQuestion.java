@@ -10,6 +10,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -59,9 +61,11 @@ public class InterviewQuestion {
     @Column(name = "expected_answer", nullable = false, columnDefinition = "text")
     private String expectedAnswer;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "key_points", nullable = false, columnDefinition = "jsonb")
     private String keyPoints;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "follow_up_questions", nullable = false, columnDefinition = "jsonb")
     private String followUpQuestions;
 

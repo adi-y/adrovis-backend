@@ -29,7 +29,7 @@ public class InterviewQuestionResponse {
 
     private List<String> keyPoints;
 
-    private List<String> followUpQuestions;
+    private List<FollowUpQuestionResponse> followUpQuestions;
 
     private String resumeBasis;
 

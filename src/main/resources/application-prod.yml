@@ -30,7 +30,22 @@ logging:
     org.hibernate.SQL: WARN
     org.springframework.web: WARN
 
+supabase:
+  url: ${SUPABASE_URL}
+  service-key: ${SUPABASE_SERVICE_KEY}
+  bucket: ${SUPABASE_BUCKET:resumes}
+
 app:
+  app:
+    gemini:
+      api-key: ${GEMINI_API_KEY}
+      model: ${GEMINI_MODEL:gemini-3.6-flash}
+      base-url: ${GEMINI_BASE_URL:https://generativelanguage.googleapis.com}
+      max-resume-chars: ${GEMINI_MAX_RESUME_CHARS:50000}
+      max-output-tokens: ${GEMINI_MAX_OUTPUT_TOKENS:50000}
+      temperature: ${GEMINI_TEMPERATURE:0.2}
+      max-retries: ${GEMINI_MAX_RETRIES:3}
+      retry-base-delay-ms: ${GEMINI_RETRY_BASE_DELAY_MS:1000}
   candidate-portal-base-url: ${CANDIDATE_PORTAL_BASE_URL:http://localhost:5173}
 
   cors:

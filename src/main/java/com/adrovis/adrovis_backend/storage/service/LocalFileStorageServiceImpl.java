@@ -15,7 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 @Service
-@Profile("dev")
+@Profile("local")
 @Slf4j
 public class LocalFileStorageServiceImpl
         extends AbstractFileStorageService {

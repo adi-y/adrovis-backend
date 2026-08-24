@@ -11,11 +11,17 @@ import java.util.UUID;
 @Builder
 public class InterviewQuestionsResponse {
 
+    private String applicationId;
+
     private UUID interviewId;
 
     private InterviewQuestionGenerationStatus generationStatus;
 
-    private String generationError;
+    private Integer totalQuestions;
 
     private List<InterviewQuestionResponse> questions;
+
+    private ClosingPitchResponse closingPitch;
+
+    private String generationError;
 }

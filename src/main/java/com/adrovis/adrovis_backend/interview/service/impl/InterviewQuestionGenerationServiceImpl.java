@@ -2,9 +2,13 @@ package com.adrovis.adrovis_backend.interview.service.impl;
 
 import com.adrovis.adrovis_backend.career.entity.Application;
 import com.adrovis.adrovis_backend.career.repository.ApplicationRepository;
+import com.adrovis.adrovis_backend.interview.client.GeminiInterviewClient;
+import com.adrovis.adrovis_backend.interview.dto.ai.AiInterviewPackage;
 import com.adrovis.adrovis_backend.interview.entity.Interview;
 import com.adrovis.adrovis_backend.interview.repository.InterviewRepository;
+import com.adrovis.adrovis_backend.interview.service.InterviewPromptBuilder;
 import com.adrovis.adrovis_backend.interview.service.InterviewQuestionGenerationService;
+import com.adrovis.adrovis_backend.interview.service.InterviewQuestionGenerationValidator;
 import com.adrovis.adrovis_backend.interview.service.ResumeTextExtractorService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,50 +24,70 @@ public class InterviewQuestionGenerationServiceImpl
         implements InterviewQuestionGenerationService {
 
     private final InterviewQuestionGenerationClaimService claimService;
+
     private final ResumeTextExtractorService resumeTextExtractorService;
+
     private final InterviewRepository interviewRepository;
+
     private final ApplicationRepository applicationRepository;
+
+    private final InterviewPromptBuilder promptBuilder;
+
+    private final GeminiInterviewClient geminiInterviewClient;
+
+    private final InterviewQuestionGenerationValidator validator;
+
+    private final InterviewQuestionPersistenceService persistenceService;
 
     @Override
     @Async("taskExecutor")
     public void generateIfNeeded(UUID interviewId) {
 
         if (!claimService.claimGeneration(interviewId)) {
+
+            log.debug(
+                    "AI generation skipped because generation is already claimed. interviewId={}",
+                    interviewId
+            );
+
             return;
         }
 
+        long startedAt =
+                System.currentTimeMillis();
+
         log.info(
-                "AI interview question generation started for interviewId={}",
+                "AI interview question generation started. interviewId={}",
                 interviewId
         );
 
         try {
 
-            // 1. Load Interview
-            Interview interview = interviewRepository
-                    .findById(interviewId)
-                    .orElseThrow(() ->
-                            new IllegalStateException(
-                                    "Interview not found: " + interviewId
-                            )
-                    );
+            Interview interview =
+                    interviewRepository
+                            .findById(interviewId)
+                            .orElseThrow(() ->
+                                    new IllegalStateException(
+                                            "Interview not found."
+                                    )
+                            );
 
-            // 2. Load Application using Interview.applicationId
-            Application application = applicationRepository
-                    .findById(interview.getApplicationId())
-                    .orElseThrow(() ->
-                            new IllegalStateException(
-                                    "Application not found: "
-                                            + interview.getApplicationId()
+            Application application =
+                    applicationRepository
+                            .findById(
+                                    interview.getApplicationId()
                             )
-                    );
+                            .orElseThrow(() ->
+                                    new IllegalStateException(
+                                            "Application not found."
+                                    )
+                            );
 
-            // 3. Get resume storage key
             String resumeStorageKey =
                     application.getResumeStorageKey();
 
-            if (resumeStorageKey == null ||
-                    resumeStorageKey.isBlank()) {
+            if (resumeStorageKey == null
+                    || resumeStorageKey.isBlank()) {
 
                 throw new IllegalStateException(
                         "Application does not have a resume."
@@ -71,29 +95,76 @@ public class InterviewQuestionGenerationServiceImpl
             }
 
             log.info(
-                    "Extracting resume text for interviewId={}, storageKey={}",
-                    interviewId,
-                    resumeStorageKey
+                    "Extracting resume for AI interview generation. interviewId={}",
+                    interviewId
             );
 
-            // 4. Extract resume text using Tika
             String resumeText =
                     resumeTextExtractorService.extractText(
                             resumeStorageKey
                     );
 
             log.info(
-                    "Resume text extracted successfully for interviewId={}, characters={}",
+                    "Resume extraction completed for AI generation. interviewId={}, characters={}",
                     interviewId,
                     resumeText.length()
             );
 
-            // TODO:
-            // 5. Build Gemini prompt
-            // 6. Call Gemini
-            // 7. Validate exactly 15 questions
-            // 8. Persist questions + closing pitch
-            // 9. Mark generation READY
+            /*
+             * IMPORTANT:
+             * Resume text is never logged.
+             */
+
+            String prompt =
+                    promptBuilder.build(
+                            application,
+                            interview,
+                            resumeText
+                    );
+
+            log.debug(
+                    "Gemini prompt prepared for interviewId={}, promptCharacters={}",
+                    interviewId,
+                    prompt.length()
+            );
+
+            long geminiStartedAt =
+                    System.currentTimeMillis();
+
+            AiInterviewPackage aiPackage =
+                    geminiInterviewClient.generate(
+                            prompt
+                    );
+
+            log.info(
+                    "Gemini generation completed for interviewId={}, durationMs={}",
+                    interviewId,
+                    System.currentTimeMillis()
+                            - geminiStartedAt
+            );
+
+            validator.validate(
+                    aiPackage
+            );
+
+            log.info(
+                    "AI interview response validated successfully. interviewId={}, questionCount={}",
+                    interviewId,
+                    aiPackage.questions().size()
+            );
+
+            persistenceService.persist(
+                    interview,
+                    aiPackage
+            );
+
+            log.info(
+                    "AI interview question generation completed. interviewId={}, durationMs={}, questionCount={}",
+                    interviewId,
+                    System.currentTimeMillis()
+                            - startedAt,
+                    aiPackage.questions().size()
+            );
 
         } catch (Exception ex) {
 
@@ -103,8 +174,11 @@ public class InterviewQuestionGenerationServiceImpl
             );
 
             log.error(
-                    "AI interview question generation failed for interviewId={}",
+                    "AI interview question generation failed. interviewId={}, durationMs={}, reason={}",
                     interviewId,
+                    System.currentTimeMillis()
+                            - startedAt,
+                    ex.getMessage(),
                     ex
             );
         }

@@ -24,10 +24,14 @@ public class ResumeTextExtractorServiceImpl
     @Override
     public String extractText(String storageKey) {
 
+        log.info(
+                "Starting resume text extraction. storageKey={}",
+                storageKey
+        );
+
         try {
 
-            Resource resource =
-                    fileStorageService.read(storageKey);
+            Resource resource = fileStorageService.read(storageKey);
 
             if (resource == null || !resource.exists()) {
                 throw new FileStorageException(
@@ -35,8 +39,13 @@ public class ResumeTextExtractorServiceImpl
                 );
             }
 
-            try (InputStream inputStream =
-                         resource.getInputStream()) {
+            log.info(
+                    "Resume resource obtained successfully. storageKey={}, filename={}",
+                    storageKey,
+                    resource.getFilename()
+            );
+
+            try (InputStream inputStream = resource.getInputStream()) {
 
                 String text = tika.parseToString(inputStream);
 
@@ -47,7 +56,7 @@ public class ResumeTextExtractorServiceImpl
                 }
 
                 log.info(
-                        "Resume text extracted successfully. storageKey={}, characters={}",
+                        "Tika extraction successful. storageKey={}, characters={}",
                         storageKey,
                         text.length()
                 );
@@ -57,12 +66,18 @@ public class ResumeTextExtractorServiceImpl
 
         } catch (FileStorageException ex) {
 
+            log.error(
+                    "Resume extraction failed. storageKey={}, reason={}",
+                    storageKey,
+                    ex.getMessage()
+            );
+
             throw ex;
 
         } catch (Exception ex) {
 
             log.error(
-                    "Failed to extract text from resume. storageKey={}",
+                    "Unexpected error during resume extraction. storageKey={}",
                     storageKey,
                     ex
             );

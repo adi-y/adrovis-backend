@@ -11,6 +11,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
 
+import java.net.URI;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -27,17 +29,24 @@ public class SupabaseStorageClient {
 
         try {
 
-            restClient.post()
-
-                    .uri(properties.getUrl()
+            String uploadUrl =
+                    properties.getUrl()
                             + "/storage/v1/object/"
                             + properties.getBucket()
                             + "/"
-                            + storagePath)
+                            + storagePath;
+
+            log.debug("Supabase upload URL: {}", uploadUrl);
+
+            restClient.post()
+
+                    .uri(URI.create(uploadUrl))
 
                     .header("apikey", properties.getServiceKey())
-                    .header("Authorization",
-                            "Bearer " + properties.getServiceKey())
+                    .header(
+                            "Authorization",
+                            "Bearer " + properties.getServiceKey()
+                    )
                     .header("x-upsert", "false")
 
                     .contentType(MediaType.parseMediaType(contentType))
@@ -67,11 +76,25 @@ public class SupabaseStorageClient {
 
             log.error(
                     "Supabase upload failed: {}",
-                    ex.getResponseBodyAsString()
+                    ex.getResponseBodyAsString(),
+                    ex
             );
 
             throw new FileStorageException(
                     "Failed to upload file to Supabase Storage.",
+                    ex
+            );
+
+        } catch (IllegalArgumentException ex) {
+
+            log.error(
+                    "Invalid Supabase upload URL. storagePath={}",
+                    storagePath,
+                    ex
+            );
+
+            throw new FileStorageException(
+                    "Invalid Supabase Storage URL.",
                     ex
             );
         }
@@ -81,18 +104,25 @@ public class SupabaseStorageClient {
 
         try {
 
-            restClient.delete()
-
-                    .uri(properties.getUrl()
+            String deleteUrl =
+                    properties.getUrl()
                             + "/storage/v1/object/"
                             + properties.getBucket()
                             + "/"
-                            + storagePath)
+                            + storagePath;
+
+            log.debug("Supabase delete URL: {}", deleteUrl);
+
+            restClient.delete()
+
+                    .uri(URI.create(deleteUrl))
 
                     .header("apikey", properties.getServiceKey())
 
-                    .header("Authorization",
-                            "Bearer " + properties.getServiceKey())
+                    .header(
+                            "Authorization",
+                            "Bearer " + properties.getServiceKey()
+                    )
 
                     .retrieve()
 
@@ -117,11 +147,25 @@ public class SupabaseStorageClient {
 
             log.error(
                     "Supabase delete failed: {}",
-                    ex.getResponseBodyAsString()
+                    ex.getResponseBodyAsString(),
+                    ex
             );
 
             throw new FileStorageException(
                     "Failed to delete file from Supabase Storage.",
+                    ex
+            );
+
+        } catch (IllegalArgumentException ex) {
+
+            log.error(
+                    "Invalid Supabase delete URL. storagePath={}",
+                    storagePath,
+                    ex
+            );
+
+            throw new FileStorageException(
+                    "Invalid Supabase Storage URL.",
                     ex
             );
         }
@@ -138,31 +182,58 @@ public class SupabaseStorageClient {
 
     public byte[] download(String storagePath) {
 
+        if (properties.getUrl() == null || properties.getUrl().isBlank()) {
+            throw new FileStorageException(
+                    "Supabase Storage URL is not configured (supabase.url is null/blank)."
+            );
+        }
+
+        if (properties.getBucket() == null || properties.getBucket().isBlank()) {
+            throw new FileStorageException(
+                    "Supabase Storage bucket is not configured (supabase.bucket is null/blank)."
+            );
+        }
+
+        if (properties.getServiceKey() == null || properties.getServiceKey().isBlank()) {
+            throw new FileStorageException(
+                    "Supabase Storage service key is not configured (supabase.service-key is null/blank)."
+            );
+        }
+
+        String downloadUrl =
+                properties.getUrl()
+                        + "/storage/v1/object/"
+                        + properties.getBucket()
+                        + "/"
+                        + storagePath;
+
+        log.info(
+                "Downloading resume from Supabase. bucket={}, storagePath={}, url={}",
+                properties.getBucket(),
+                storagePath,
+                downloadUrl
+        );
+
         try {
+
+            URI downloadUri = URI.create(downloadUrl);
 
             return restClient.get()
 
-                    .uri(properties.getUrl()
-                            + "/storage/v1/object/"
-                            + properties.getBucket()
-                            + "/"
-                            + storagePath)
+                    .uri(downloadUri)
 
                     .header("apikey", properties.getServiceKey())
-                    .header(
-                            "Authorization",
-                            "Bearer " + properties.getServiceKey()
-                    )
+                    .header("Authorization", "Bearer " + properties.getServiceKey())
 
                     .retrieve()
 
                     .onStatus(
                             HttpStatusCode::isError,
                             (request, response) -> {
-
                                 throw new FileStorageException(
                                         "Supabase download failed. HTTP "
                                                 + response.getStatusCode().value()
+                                                + " for storagePath=" + storagePath
                                 );
                             }
                     )
@@ -172,7 +243,9 @@ public class SupabaseStorageClient {
         } catch (RestClientResponseException ex) {
 
             log.error(
-                    "Supabase download failed: {}",
+                    "Supabase download failed. storagePath={}, status={}, response={}",
+                    storagePath,
+                    ex.getStatusCode(),
                     ex.getResponseBodyAsString()
             );
 
@@ -180,6 +253,20 @@ public class SupabaseStorageClient {
                     "Failed to download file from Supabase Storage.",
                     ex
             );
+
+        } catch (IllegalArgumentException ex) {
+
+            log.error(
+                    "Invalid Supabase download URL. storagePath={}",
+                    storagePath,
+                    ex
+            );
+
+            throw new FileStorageException(
+                    "Invalid Supabase Storage URL.",
+                    ex
+            );
         }
     }
+
 }
