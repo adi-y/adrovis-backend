@@ -1,6 +1,9 @@
 package com.adrovis.adrovis_backend.interview.controller;
 
 import com.adrovis.adrovis_backend.interview.dto.request.*;
+import com.adrovis.adrovis_backend.interview.dto.request.InterviewCopilotRequest;
+import com.adrovis.adrovis_backend.interview.dto.response.InterviewCopilotResponse;
+import com.adrovis.adrovis_backend.interview.service.InterviewCopilotService;
 import com.adrovis.adrovis_backend.interview.dto.response.InterviewQuestionsResponse;
 import com.adrovis.adrovis_backend.interview.dto.response.InterviewResponse;
 import com.adrovis.adrovis_backend.interview.dto.response.InterviewSummaryResponse;
@@ -27,6 +30,7 @@ public class AdminInterviewController {
 
     private final InterviewSchedulingService interviewSchedulingService;
     private final InterviewQuestionService interviewQuestionService;
+    private final InterviewCopilotService interviewCopilotService;
 
     @GetMapping
     @Operation(summary = "List/filter interviews for the dashboard",
@@ -128,5 +132,40 @@ public class AdminInterviewController {
     public ResponseEntity<InterviewResponse> requestAvailabilityAgain(
             @Parameter(example = "APP202600038") @PathVariable String applicationId) {
         return ResponseEntity.ok(interviewSchedulingService.requestAvailabilityAgain(applicationId));
+    }
+
+    @PostMapping("/{applicationId}/copilot")
+    @Operation(
+            summary = "Ask the interview copilot",
+            description = "ADMIN — context-aware interview assistance for the current question, research, technical explanations, follow-ups and saved notes."
+    )
+    public ResponseEntity<InterviewCopilotResponse> copilot(
+            @Parameter(example = "APP202600004")
+            @PathVariable String applicationId,
+
+            @Valid
+            @RequestBody InterviewCopilotRequest request
+    ) {
+
+        return ResponseEntity.ok(
+                interviewCopilotService.ask(
+                        applicationId,
+                        request
+                )
+        );
+    }
+
+    @PostMapping("/{applicationId}/copilot/save")
+    public ResponseEntity<InterviewCopilotResponse.SavedNote> saveCopilotNote(
+            @PathVariable String applicationId,
+            @Valid @RequestBody InterviewCopilotSaveRequest request
+    ) {
+
+        return ResponseEntity.ok(
+                interviewCopilotService.save(
+                        applicationId,
+                        request
+                )
+        );
     }
 }

@@ -3,6 +3,7 @@ package com.adrovis.adrovis_backend.interview.service.impl;
 import com.adrovis.adrovis_backend.career.entity.Application;
 import com.adrovis.adrovis_backend.career.repository.ApplicationRepository;
 import com.adrovis.adrovis_backend.interview.dto.response.FollowUpQuestionResponse;
+import com.adrovis.adrovis_backend.interview.dto.response.InterviewCopilotResponse;
 import com.adrovis.adrovis_backend.interview.dto.response.InterviewQuestionResponse;
 import com.adrovis.adrovis_backend.interview.dto.response.InterviewQuestionsResponse;
 import com.adrovis.adrovis_backend.interview.entity.Interview;
@@ -100,6 +101,11 @@ public class InterviewQuestionServiceImpl
                 .closingPitch(
                         parseClosingPitchScript(
                                 interview.getAiClosingPitch()
+                        )
+                )
+                .copilotNotes(
+                        parseCopilotNotes(
+                                interview.getAiCopilotNotes()
                         )
                 )
                 .generationError(
@@ -204,6 +210,37 @@ public class InterviewQuestionServiceImpl
 
             log.error(
                     "Failed to parse interview follow-up JSON.",
+                    ex
+            );
+
+            return Collections.emptyList();
+        }
+    }
+    private List<InterviewCopilotResponse.SavedNote>
+    parseCopilotNotes(
+            String json
+    ) {
+
+        if (json == null
+                || json.isBlank()) {
+
+            return Collections.emptyList();
+        }
+
+        try {
+
+            return objectMapper.readValue(
+                    json,
+                    new TypeReference<
+                            List<InterviewCopilotResponse.SavedNote>
+                            >() {
+                    }
+            );
+
+        } catch (Exception ex) {
+
+            log.warn(
+                    "Failed to parse interview copilot notes.",
                     ex
             );
 

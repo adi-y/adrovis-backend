@@ -86,6 +86,10 @@ public class Interview {
     @Column(name = "ai_closing_pitch", columnDefinition = "jsonb")
     private String aiClosingPitch;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "ai_copilot_notes", columnDefinition = "jsonb")
+    private String aiCopilotNotes;
+
     @Column(name = "availability_requested_at")
     private OffsetDateTime availabilityRequestedAt;
 

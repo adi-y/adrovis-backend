@@ -1,6 +1,7 @@
 package com.adrovis.adrovis_backend.interview.dto.response;
 
 import com.adrovis.adrovis_backend.interview.enums.InterviewQuestionGenerationStatus;
+
 import lombok.Builder;
 import lombok.Getter;
 
@@ -22,6 +23,8 @@ public class InterviewQuestionsResponse {
     private List<InterviewQuestionResponse> questions;
 
     private String closingPitch;
+
+    private List<InterviewCopilotResponse.SavedNote> copilotNotes;
 
     private String generationError;
 }
