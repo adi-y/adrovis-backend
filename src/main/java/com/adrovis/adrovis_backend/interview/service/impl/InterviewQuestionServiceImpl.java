@@ -2,7 +2,6 @@ package com.adrovis.adrovis_backend.interview.service.impl;
 
 import com.adrovis.adrovis_backend.career.entity.Application;
 import com.adrovis.adrovis_backend.career.repository.ApplicationRepository;
-import com.adrovis.adrovis_backend.interview.dto.response.ClosingPitchResponse;
 import com.adrovis.adrovis_backend.interview.dto.response.FollowUpQuestionResponse;
 import com.adrovis.adrovis_backend.interview.dto.response.InterviewQuestionResponse;
 import com.adrovis.adrovis_backend.interview.dto.response.InterviewQuestionsResponse;
@@ -22,7 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -82,10 +80,6 @@ public class InterviewQuestionServiceImpl
                         .map(this::toResponse)
                         .toList();
 
-        ClosingPitchResponse closingPitch =
-                parseClosingPitch(
-                        interview.getAiClosingPitch()
-                );
 
         return InterviewQuestionsResponse.builder()
                 .applicationId(
@@ -104,7 +98,9 @@ public class InterviewQuestionServiceImpl
                         questions
                 )
                 .closingPitch(
-                        closingPitch
+                        parseClosingPitchScript(
+                                interview.getAiClosingPitch()
+                        )
                 )
                 .generationError(
                         interview.getQuestionGenerationError()
@@ -214,8 +210,7 @@ public class InterviewQuestionServiceImpl
             return Collections.emptyList();
         }
     }
-
-    private ClosingPitchResponse parseClosingPitch(
+    private String parseClosingPitchScript(
             String json
     ) {
 
@@ -230,15 +225,12 @@ public class InterviewQuestionServiceImpl
             JsonNode node =
                     objectMapper.readTree(json);
 
-            return objectMapper.treeToValue(
-                    node,
-                    ClosingPitchResponse.class
-            );
+            return node.path("script").asText(null);
 
         } catch (Exception ex) {
 
             log.error(
-                    "Failed to parse AI closing pitch JSON.",
+                    "Failed to parse interview closing pitch JSON.",
                     ex
             );
 
