@@ -37,6 +37,18 @@ app:
     temperature: ${GEMINI_TEMPERATURE:0.2}
     max-retries: ${GEMINI_MAX_RETRIES:3}
     retry-base-delay-ms: ${GEMINI_RETRY_BASE_DELAY_MS:1000}
+
+  gemini-copilot:
+    api-key: ${GEMINI_COPILOT_API_KEY}
+    model: ${GEMINI_COPILOT_MODEL:gemini-3.6-flash}
+    base-url: ${GEMINI_COPILOT_BASE_URL:https://generativelanguage.googleapis.com}
+    max-output-tokens: ${GEMINI_COPILOT_MAX_OUTPUT_TOKENS:1600}
+    temperature: ${GEMINI_COPILOT_TEMPERATURE:0.2}
+    max-input-chars: ${GEMINI_COPILOT_MAX_INPUT_CHARS:24000}
+    max-notes: ${GEMINI_COPILOT_MAX_NOTES:50}
+    max-retries: ${GEMINI_COPILOT_MAX_RETRIES:1}
+    retry-base-delay-ms: ${GEMINI_COPILOT_RETRY_BASE_DELAY_MS:600}
+
   candidate-portal-base-url: ${CANDIDATE_PORTAL_BASE_URL:http://localhost:5173}
 
   cors:

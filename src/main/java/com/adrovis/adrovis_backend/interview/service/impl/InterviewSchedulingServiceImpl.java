@@ -11,7 +11,9 @@ import com.adrovis.adrovis_backend.interview.dto.response.InterviewSummaryRespon
 import com.adrovis.adrovis_backend.interview.entity.Interview;
 import com.adrovis.adrovis_backend.interview.entity.InterviewAvailabilitySlot;
 import com.adrovis.adrovis_backend.interview.entity.InterviewStatus;
+import com.adrovis.adrovis_backend.interview.enums.InterviewQuestionGenerationStatus;
 import com.adrovis.adrovis_backend.interview.repository.InterviewAvailabilitySlotRepository;
+import com.adrovis.adrovis_backend.interview.repository.InterviewQuestionRepository;
 import com.adrovis.adrovis_backend.interview.repository.InterviewRepository;
 import com.adrovis.adrovis_backend.interview.service.InterviewQuestionGenerationService;
 import com.adrovis.adrovis_backend.interview.service.InterviewSchedulingService;
@@ -46,6 +48,7 @@ public class InterviewSchedulingServiceImpl implements InterviewSchedulingServic
     private final InterviewAvailabilitySlotRepository slotRepository;
     private final ApplicationRepository applicationRepository;
     private final EmailService emailService;
+    private final InterviewQuestionRepository interviewQuestionRepository;
 
     private final InterviewQuestionGenerationService interviewQuestionGenerationService;
 
@@ -216,6 +219,11 @@ public class InterviewSchedulingServiceImpl implements InterviewSchedulingServic
         interview.setStatus(InterviewStatus.CANCELLED);
         interview.setAdminNote(request.reason());
         interview.setCancelledAt(OffsetDateTime.now());
+
+        purgeAiInterviewData(
+                interview
+        );
+
         interviewRepository.save(interview);
 
         emailService.sendInterviewCancelledEmailAsync(application, interview);
@@ -234,7 +242,22 @@ public class InterviewSchedulingServiceImpl implements InterviewSchedulingServic
                     "Outcome can only be recorded for a SCHEDULED interview");
         }
 
-        interview.setStatus(InterviewStatus.valueOf(request.outcome()));
+        InterviewStatus outcome =
+                InterviewStatus.valueOf(
+                        request.outcome()
+                );
+
+        interview.setStatus(
+                outcome
+        );
+
+        if (outcome == InterviewStatus.COMPLETED) {
+
+            purgeAiInterviewData(
+                    interview
+            );
+        }
+
         interviewRepository.save(interview);
 
         return toResponse(application, interview);
@@ -260,6 +283,26 @@ public class InterviewSchedulingServiceImpl implements InterviewSchedulingServic
         return toResponse(application, interview);
     }
 
+    private void purgeAiInterviewData(
+            Interview interview
+    ) {
+
+        interviewQuestionRepository.deleteByInterviewId(
+                interview.getId()
+        );
+
+        interview.setAiClosingPitch(null);
+
+        interview.setAiCopilotNotes(null);
+
+        interview.setQuestionGenerationStatus(
+                InterviewQuestionGenerationStatus.PURGED
+        );
+
+        interview.setQuestionGenerationError(
+                null
+        );
+    }
     // ---------- helpers ----------
 
     private Application findApplicationOrThrow(String applicationId) {
