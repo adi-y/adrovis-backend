@@ -1,6 +1,5 @@
 package com.adrovis.adrovis_backend.interview.service;
 
-import com.adrovis.adrovis_backend.interview.dto.ai.AiClosingPitch;
 import com.adrovis.adrovis_backend.interview.dto.ai.AiFollowUpQuestion;
 import com.adrovis.adrovis_backend.interview.dto.ai.AiInterviewPackage;
 import com.adrovis.adrovis_backend.interview.dto.ai.AiInterviewQuestion;
@@ -14,7 +13,7 @@ import java.util.Set;
 public class InterviewQuestionGenerationValidator {
 
     private static final int MAX_QUESTIONS = 15;
-    private static final int MIN_QUESTIONS = 10;
+    private static final int MIN_QUESTIONS = 15;
 
     public void validate(
             AiInterviewPackage packageData
@@ -132,43 +131,8 @@ public class InterviewQuestionGenerationValidator {
             }
         }
 
-        validateClosingPitch(
-                packageData.closingPitch()
-        );
     }
 
-    private void validateClosingPitch(
-            AiClosingPitch pitch
-    ) {
-
-        if (pitch == null) {
-            throw new IllegalStateException(
-                    "AI interview closing pitch is missing."
-            );
-        }
-
-        if (pitch.candidateStrengths() == null
-                || pitch.candidateGaps() == null
-                || pitch.programValuePoints() == null) {
-
-            throw new IllegalStateException(
-                    "AI interview closing pitch is incomplete."
-            );
-        }
-
-        if (isBlank(pitch.bestValueAngle())
-                || isBlank(pitch.transition())
-                || isBlank(pitch.candidateSpecificPitch())
-                || isBlank(pitch.feeExplanation())
-                || isBlank(pitch.commitmentMessage())
-                || isBlank(pitch.ppoMessage())
-                || isBlank(pitch.closingQuestion())) {
-
-            throw new IllegalStateException(
-                    "AI interview closing pitch contains missing content."
-            );
-        }
-    }
 
     private boolean isBlank(String value) {
 

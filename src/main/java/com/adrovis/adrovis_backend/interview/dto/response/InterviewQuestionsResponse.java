@@ -21,7 +21,7 @@ public class InterviewQuestionsResponse {
 
     private List<InterviewQuestionResponse> questions;
 
-    private ClosingPitchResponse closingPitch;
+    private String closingPitch;
 
     private String generationError;
 }

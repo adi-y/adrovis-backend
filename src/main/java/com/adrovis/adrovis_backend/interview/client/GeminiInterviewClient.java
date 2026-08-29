@@ -440,94 +440,6 @@ public class GeminiInterviewClient {
 
         /*
          * ---------------------------------------------------------
-         * CLOSING PITCH OBJECT
-         * ---------------------------------------------------------
-         */
-
-        Map<String, Object> closingPitchSchema =
-                new LinkedHashMap<>();
-
-        closingPitchSchema.put(
-                "type",
-                "OBJECT"
-        );
-
-        Map<String, Object> closingProperties =
-                new LinkedHashMap<>();
-
-        closingProperties.put(
-                "candidateStrengths",
-                arrayOfStringsSchema()
-        );
-
-        closingProperties.put(
-                "candidateGaps",
-                arrayOfStringsSchema()
-        );
-
-        closingProperties.put(
-                "bestValueAngle",
-                stringSchema()
-        );
-
-        closingProperties.put(
-                "transition",
-                stringSchema()
-        );
-
-        closingProperties.put(
-                "candidateSpecificPitch",
-                stringSchema()
-        );
-
-        closingProperties.put(
-                "programValuePoints",
-                arrayOfStringsSchema()
-        );
-
-        closingProperties.put(
-                "feeExplanation",
-                stringSchema()
-        );
-
-        closingProperties.put(
-                "commitmentMessage",
-                stringSchema()
-        );
-
-        closingProperties.put(
-                "ppoMessage",
-                stringSchema()
-        );
-
-        closingProperties.put(
-                "closingQuestion",
-                stringSchema()
-        );
-
-        closingPitchSchema.put(
-                "properties",
-                closingProperties
-        );
-
-        closingPitchSchema.put(
-                "required",
-                List.of(
-                        "candidateStrengths",
-                        "candidateGaps",
-                        "bestValueAngle",
-                        "transition",
-                        "candidateSpecificPitch",
-                        "programValuePoints",
-                        "feeExplanation",
-                        "commitmentMessage",
-                        "ppoMessage",
-                        "closingQuestion"
-                )
-        );
-
-        /*
-         * ---------------------------------------------------------
          * ROOT OBJECT
          * ---------------------------------------------------------
          */
@@ -561,11 +473,6 @@ public class GeminiInterviewClient {
                 questionsSchema
         );
 
-        rootProperties.put(
-                "closingPitch",
-                closingPitchSchema
-        );
-
         root.put(
                 "properties",
                 rootProperties
@@ -574,8 +481,7 @@ public class GeminiInterviewClient {
         root.put(
                 "required",
                 List.of(
-                        "questions",
-                        "closingPitch"
+                        "questions"
                 )
         );
 
@@ -875,11 +781,10 @@ public class GeminiInterviewClient {
 
             log.info(
                     "Gemini JSON successfully mapped to AiInterviewPackage. "
-                            + "questionCount={}, hasClosingPitch={}",
+                            + "questionCount={}",
                     aiPackage.questions() == null
                             ? 0
-                            : aiPackage.questions().size(),
-                    aiPackage.closingPitch() != null
+                            : aiPackage.questions().size()
             );
 
             log.info(
