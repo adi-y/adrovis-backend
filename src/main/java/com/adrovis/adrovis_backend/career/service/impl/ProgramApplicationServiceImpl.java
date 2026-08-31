@@ -24,7 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class ProgramApplicationServiceImpl implements ProgramApplicationService {
 
-    private static final String PROGRAM_TITLE_SNAPSHOT = "Associate Software Engineer Program";
+    private static final String PROGRAM_TITLE_SNAPSHOT = "Software Developer";
 
     private final ApplicationRepository applicationRepository;
     private final FileStorageService fileStorageService;
