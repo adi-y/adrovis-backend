@@ -87,6 +87,7 @@ public class SecurityConfig {
                                 "/api/v1/admin/interviews/{applicationId}/cancel",
                                 "/api/v1/admin/interviews",
                                 "/api/v1/admin/interviews/{applicationId}",
+                                "/api/v1/applications/{applicationId}/payment-follow-up",
                                 "/api/v1/admin/newsletter/subscribers",
                                 "/api/v1/admin/newsletter/subscribers/{subscriberId}"
 

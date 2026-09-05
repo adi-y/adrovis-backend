@@ -123,4 +123,22 @@ public class ApplicationController {
                 )
         );
     }
+
+    @PostMapping("/{applicationId}/payment-follow-up")
+    public ResponseEntity<ApiResponse<Void>> sendInternshipPaymentFollowUp(
+            @PathVariable String applicationId
+    ) {
+
+        applicationService.sendInternshipPaymentFollowUp(
+                applicationId
+        );
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        HttpStatus.OK,
+                        "Internship follow-up email sent successfully.",
+                        null
+                )
+        );
+    }
 }

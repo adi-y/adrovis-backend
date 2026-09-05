@@ -29,4 +29,9 @@ public interface EmailService {
             Application application,
             PaymentTransaction payment
     );
+
+    void sendInternshipPaymentFollowUpEmailAsync(
+            Application application
+    );
+
 }

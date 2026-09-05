@@ -165,6 +165,26 @@ emailService.sendApplicationShortlistedEmailAsync(application);
         return applicationMapper.toResponse(application);
     }
 
+    @Override
+    public void sendInternshipPaymentFollowUp(
+            String applicationId
+    ) {
+
+        Application application =
+                applicationRepository
+                        .findByApplicationId(applicationId)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Application not found with applicationId: "
+                                                + applicationId
+                                )
+                        );
+
+        emailService.sendInternshipPaymentFollowUpEmailAsync(
+                application
+        );
+    }
+
     private Job findJob(UUID jobId) {
 
         return jobRepository.findById(jobId)

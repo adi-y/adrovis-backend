@@ -115,6 +115,28 @@ public class EmailServiceImpl implements EmailService {
                 );
     }
 
+    private String buildInternshipPaymentFollowUpTemplate(
+            Application application
+    ) throws IOException {
+
+        ClassPathResource resource =
+                new ClassPathResource(
+                        "email/InternshipPaymentFollowUp.html"
+                );
+
+        String html =
+                new String(
+                        resource.getInputStream().readAllBytes(),
+                        StandardCharsets.UTF_8
+                );
+
+        return html
+                .replace(
+                        "{{firstName}}",
+                        application.getApplicantName()
+                );
+    }
+
     private String buildPaymentSuccessTemplate(
             Application application,
             PaymentTransaction payment
@@ -248,6 +270,61 @@ public class EmailServiceImpl implements EmailService {
                     application.getApplicantEmail(),
                     application.getApplicationId(),
                     payment.getReferenceId(),
+                    ex
+            );
+        }
+    }
+
+    @Async("emailTaskExecutor")
+    @Override
+    public void sendInternshipPaymentFollowUpEmailAsync(
+            Application application
+    ) {
+
+        try {
+
+            String html =
+                    buildInternshipPaymentFollowUpTemplate(
+                            application
+                    );
+
+            Resend resend =
+                    new Resend(
+                            mailProperties.getApiKey()
+                    );
+
+            SendEmailRequest request =
+                    SendEmailRequest.builder()
+                            .from(
+                                    "Adrovis <"
+                                            + mailProperties.getFrom()
+                                            + ">"
+                            )
+                            .to(application.getApplicantEmail())
+                            .subject(
+                                    "Follow-Up Regarding Your Adrovis Internship"
+                            )
+                            .html(html)
+                            .build();
+
+            var response =
+                    resend.emails().send(request);
+
+            log.info(
+                    "Internship follow-up email sent successfully. " +
+                            "recipient={}, applicationId={}, resendId={}",
+                    application.getApplicantEmail(),
+                    application.getApplicationId(),
+                    response.getId()
+            );
+
+        } catch (ResendException | IOException ex) {
+
+            log.error(
+                    "Failed to send internship follow-up email. " +
+                            "recipient={}, applicationId={}",
+                    application.getApplicantEmail(),
+                    application.getApplicationId(),
                     ex
             );
         }
