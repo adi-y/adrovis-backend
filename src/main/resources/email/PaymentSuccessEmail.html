@@ -33,6 +33,9 @@
           .adr-stack-pad { padding-bottom: 14px !important; }
           .adr-cta-td { width: 100% !important; }
           .adr-cta-a { display: block !important; width: 100% !important; box-sizing: border-box; text-align: center; }
+
+          .adr-contact-td { display: block !important; width: 100% !important; text-align: left !important; padding-bottom: 6px !important; }
+          .adr-contact-td:last-child { padding-bottom: 0 !important; }
         }
     </style>
 </head>
@@ -60,11 +63,17 @@
                                 <td align="left" valign="middle">
                                     <table role="presentation" cellpadding="0" cellspacing="0" border="0">
                                         <tr>
-                                            <td valign="middle" width="36" style="width:36px; line-height:0;">
-                                                <svg width="34" height="32" viewBox="0 0 100 90" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block;">
-                                                    <polygon points="50,4 6,76 34,70 50,46" fill="#0A0A0A"/>
-                                                    <polygon points="50,4 94,76 66,70 50,46" fill="#0A0A0A"/>
-                                                    <polygon points="50,48 38,72 50,86 62,72" fill="#0A0A0A"/>
+                                            <td valign="middle" width="28" style="width:28px; line-height:0;">
+                                                <svg width="28" height="44" viewBox="-90 -140 180 280" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block;">
+                                                    <polygon points="0,-130 -85,15 -35,15 0,-50" fill="#171914"/>
+                                                    <polygon points="0,-130 0,-50 -35,15 -45,15" fill="#5b5f56"/>
+                                                    <polygon points="0,130 85,-15 35,-15 0,50" fill="#171914"/>
+                                                    <polygon points="0,130 0,50 35,-15 45,-15" fill="#5b5f56"/>
+                                                    <polygon points="0,-35 25,0 0,35 -25,0" fill="#171914" stroke="#f3f0e8" stroke-width="2.5"/>
+                                                    <polygon points="0,-35 25,0 0,0" fill="#f3f0e8"/>
+                                                    <polygon points="0,0 25,0 0,35" fill="#a3a89c"/>
+                                                    <polygon points="0,35 -25,0 0,0" fill="#5b5f56"/>
+                                                    <polygon points="-25,0 0,-35 0,0" fill="#d8dcd1"/>
                                                 </svg>
                                             </td>
                                             <td width="16" style="width:16px; font-size:0; line-height:0;" align="center">
@@ -125,11 +134,11 @@
                                 <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:15px; line-height:25px; font-weight:400; color:#3F3F46;">
                                     Dear {{name}},
                                     <br /><br />
-                                    We’re excited to welcome you to <strong style="color:#0A0A0A;">Adrovis</strong> as part of the <strong style="color:#0A0A0A;">{{program}}</strong> internship.
+                                    We're excited to welcome you to <strong style="color:#0A0A0A;">Adrovis</strong> as part of the <strong style="color:#0A0A0A;">{{program}}</strong>.
                                     <br /><br />
-                                    Your onboarding is now confirmed, and we’re looking forward to having you with us. We’re excited to see what you’ll learn, build, and accomplish during your time with the team.
+                                    Your onboarding is now confirmed, and we're looking forward to having you with us. We're excited to see what you'll learn, build, and accomplish during your time with the team.
                                     <br /><br />
-                                    We’re glad to have you with us and look forward to the journey ahead.
+                                    We're glad to have you on board and look forward to the journey ahead.
                                 </td>
                             </tr>
                         </table>
@@ -146,24 +155,24 @@
                                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                                         <tr>
                                             <td width="50%" class="adr-stack" valign="top" style="padding-bottom:14px;">
-                                                <div style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:9.5px; font-weight:700; color:#71717A; text-transform:uppercase; letter-spacing:0.9px;">Internship</div>
-                                                <div style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:13px; font-weight:700; color:#0A0A0A; padding-top:4px;">{{program}}</div>
+                                                <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:9.5px; font-weight:700; color:#71717A; text-transform:uppercase; letter-spacing:0.9px;">Internship</div>
+                                                <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:13px; font-weight:700; color:#0A0A0A; padding-top:4px;">{{program}}</div>
                                             </td>
                                             <td width="50%" class="adr-stack" valign="top" style="padding-bottom:14px;">
-                                                <div style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:9.5px; font-weight:700; color:#71717A; text-transform:uppercase; letter-spacing:0.9px;">Application Reference</div>
-                                                <div style="font-family:'SF Mono', Menlo, Consolas, monospace; font-size:13px; font-weight:700; color:#0A0A0A; padding-top:4px;">{{applicationId}}</div>
+                                                <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:9.5px; font-weight:700; color:#71717A; text-transform:uppercase; letter-spacing:0.9px;">Application Reference</div>
+                                                <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:13px; font-weight:700; color:#0A0A0A; padding-top:4px;">{{applicationId}}</div>
                                             </td>
                                         </tr>
                                         <tr>
                                             <td width="50%" class="adr-stack" valign="top">
-                                                <div style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:9.5px; font-weight:700; color:#71717A; text-transform:uppercase; letter-spacing:0.9px;">Onboarding Status</div>
+                                                <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:9.5px; font-weight:700; color:#71717A; text-transform:uppercase; letter-spacing:0.9px;">Onboarding Status</div>
                                                 <div style="padding-top:4px;">
-                                                    <span style="display:inline-block; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:11px; font-weight:700; color:#FFFFFF; background-color:#0A0A0A; padding:3px 9px; border-radius:3px; letter-spacing:0.4px;">CONFIRMED</span>
+                                                    <span style="display:inline-block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:11px; font-weight:700; color:#FFFFFF; background-color:#0A0A0A; padding:3px 9px; border-radius:3px; letter-spacing:0.4px;">CONFIRMED</span>
                                                 </div>
                                             </td>
                                             <td width="50%" class="adr-stack" valign="top">
-                                                <div style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:9.5px; font-weight:700; color:#71717A; text-transform:uppercase; letter-spacing:0.9px;">Next Step</div>
-                                                <div style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:13px; font-weight:700; color:#0A0A0A; padding-top:4px;">Onboarding</div>
+                                                <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:9.5px; font-weight:700; color:#71717A; text-transform:uppercase; letter-spacing:0.9px;">Next Step</div>
+                                                <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:13px; font-weight:700; color:#0A0A0A; padding-top:4px;">Team Introduction</div>
                                             </td>
                                         </tr>
                                     </table>
@@ -178,13 +187,18 @@
                     <td class="adr-px" style="padding: 18px 40px 4px 40px;">
                         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#FAFAFA; border-left:3px solid #0A0A0A;">
                             <tr>
-                                <td style="padding:16px 18px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:13px; line-height:21px; color:#52525B;">
-                                    <strong style="color:#0A0A0A;">Welcome aboard</strong><br />
-                                    We’re excited to have you as part of Adrovis and look forward to the journey ahead.
+                                <td style="padding: 16px 18px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:13px; line-height:21px; color:#52525B;">
+                                    <strong style="color:#0A0A0A;">Welcome Aboard</strong><br />
+                                    We're excited to have you as part of Adrovis and look forward to the journey ahead.
                                 </td>
                             </tr>
                         </table>
                     </td>
+                </tr>
+
+                <!-- SPACER (no CTA needed on a welcome email) -->
+                <tr>
+                    <td class="adr-px" style="padding: 18px 40px 18px 40px;">&nbsp;</td>
                 </tr>
 
                 <!-- SIGN-OFF -->
@@ -193,13 +207,13 @@
                         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                             <tr>
                                 <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:13.5px; line-height:22px; color:#3F3F46;">
-                                    Should you have any questions in the meantime, please do not hesitate to reply directly to this email or reach us at <a href="mailto:support@adrovis.com" style="color:#0A0A0A; font-weight:600; text-decoration:underline;">support@adrovis.com</a>.
+                                    Should you have any questions in the meantime, please do not hesitate to reply directly to this email or reach us at <a href="mailto:hello@adrovis.com" style="color:#0A0A0A; font-weight:600; text-decoration:underline;">hello@adrovis.com</a>.
                                     <br /><br />
-                                    Welcome to Adrovis. We’re glad to have you with us.
+                                    Welcome to Adrovis. We're glad to have you with us.
                                     <div style="margin-top:16px; color:#0A0A0A; font-weight:600;">
                                         Regards,<br />
                                         Talent Acquisition Team<br />
-                                        <span style="font-weight:400; color:#71717A;">Adrovis Technologies Pvt. Ltd.</span>
+                                        <span style="font-weight:400; color:#71717A;">Adrovis Technologies LLP.</span>
                                     </div>
                                 </td>
                             </tr>
@@ -223,27 +237,41 @@
                                                 ADROVIS &middot; <span style="color:#A1A1AA; font-weight:normal;">Technology &amp; Services</span>
                                             </td>
                                             <td align="right" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:10px; color:#71717A;">
-                                                India
+                                                Maharashtra, India
                                             </td>
                                         </tr>
                                         <tr>
                                             <td colspan="2" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:10.5px; color:#8A8A8E; padding-top:6px; line-height:1.6;">
-                                                Software, engineering and technology services for modern businesses.
+                                                Enterprise software architecture, backend infrastructure, and applied AI systems for organizations at scale.
                                             </td>
                                         </tr>
                                     </table>
 
+                                    <!-- CONTACT ROW: stacks cleanly on mobile — email on its own line, both numbers together on the next line -->
                                     <table width="100%" cellpadding="0" cellspacing="0" border="0">
                                         <tr>
-                                            <td align="left" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:10.5px; color:#71717A;">
-                                                Support: <a href="mailto:support@adrovis.com" style="color:#D4D4D8; text-decoration:none;">support@adrovis.com</a> &nbsp;|&nbsp;
-                                                Tel: <span style="color:#D4D4D8;">+91 98765 43210</span>
+                                            <td align="left" valign="top" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:10.5px; color:#71717A;">
+
+                                                <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                                                    <tr>
+                                                        <td class="adr-contact-td" style="padding-bottom: 6px;">
+                                                            Support: <a href="mailto:support@adrovis.com" style="color:#D4D4D8; text-decoration:none;">support@adrovis.com</a>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="adr-contact-td">
+                                                            Tel: <span style="color:#D4D4D8;">+91-7840906457</span>, <span style="color:#D4D4D8;">+91-9307192715</span>
+                                                        </td>
+                                                    </tr>
+                                                </table>
+
                                             </td>
-                                            <td align="right" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:10.5px;">
+                                            <td align="right" valign="top" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:10.5px;">
                                                 <a href="https://www.adrovis.com" target="_blank" style="color:#D4D4D8; text-decoration:none; font-weight:bold;">adrovis.com</a>
                                             </td>
                                         </tr>
                                     </table>
+
                                 </td>
                             </tr>
                         </table>
@@ -254,9 +282,9 @@
                                 <td align="center" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:10.5px; line-height:16px; color:#A1A1AA;">
                                     <a href="https://www.adrovis.com/privacy" style="color:#71717A; text-decoration:underline;">Privacy Policy</a> &nbsp;&bull;&nbsp;
                                     <a href="https://www.adrovis.com/terms" style="color:#71717A; text-decoration:underline;">Terms of Service</a> &nbsp;&bull;&nbsp;
-                                    <a href="https://www.adrovis.com/candidate-notice" style="color:#71717A; text-decoration:underline;">Candidate Privacy Notice</a>
+                                    <a href="https://www.adrovis.com/data-rights" style="color:#71717A; text-decoration:underline;">Candidate Privacy Notice</a>
                                     <div style="padding-top:8px; color:#A1A1AA;">
-                                        &copy; 2026 Adrovis. All rights reserved.<br />
+                                        &copy; 2026 Adrovis Technologies LLP. All rights reserved.<br />
                                         This message was sent to you because you applied for a position at Adrovis.
                                     </div>
                                 </td>
