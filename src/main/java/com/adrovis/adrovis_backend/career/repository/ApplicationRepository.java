@@ -24,4 +24,6 @@ public interface ApplicationRepository extends JpaRepository<Application, UUID> 
             Job job
     );
 
+    boolean existsByApplicantEmailIgnoreCase(String applicantEmail);
+
 }

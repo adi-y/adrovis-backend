@@ -18,7 +18,8 @@ import com.adrovis.adrovis_backend.storage.service.FileStorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import com.adrovis.adrovis_backend.career.entity.CandidateOutreach;
+import com.adrovis.adrovis_backend.career.repository.CandidateOutreachRepository;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -31,35 +32,60 @@ public class ProgramApplicationServiceImpl implements ProgramApplicationService 
     private final ApplicationIdGenerator idGenerator;
     private final ApplicationMapper applicationMapper;
     private final EmailService emailService;
+    private final CandidateOutreachRepository candidateOutreachRepository;
 
     @Override
     @Transactional
-    public ApplicationCreatedResponse createDraft(ProgramApplicationCreateRequest request) {
+    public ApplicationCreatedResponse createDraft(
+            ProgramApplicationCreateRequest request
+    ) {
 
-        FileUploadResponse uploadedResume = fileStorageService.upload(request.getResume());
+        FileUploadResponse uploadedResume =
+                fileStorageService.upload(request.getResume());
 
-        Application application = new Application(
-                idGenerator.next(),
-                null,                              // no Job for PROGRAM type
-                ApplicationType.PROGRAM,
-                ApplicationStatus.PENDING,
-                PROGRAM_TITLE_SNAPSHOT,
-                request.getFullName(),
-                request.getEmail(),
-                request.getPhone(),
-                request.getCollege(),
-                request.getGraduationYear(),
-                uploadedResume.storageKey(),
-                uploadedResume.fileUrl(),
-                uploadedResume.originalName(),
-                uploadedResume.mimeType(),
-                uploadedResume.sizeBytes(),
-                null,                               // note — not applicable to PROGRAM
-                false,                               // isConsent — not yet
-                null                                  // submittedAt — not yet
-        );
+        CandidateOutreach outreach =
+                candidateOutreachRepository
+                        .findFirstByEmailIgnoreCase(request.getEmail())
+                        .orElse(null);
 
-        Application saved = applicationRepository.save(application);
+        String source =
+                outreach != null
+                        ? outreach.getSource()
+                        : "WEBSITE";
+
+        Application application =
+                new Application(
+                        idGenerator.next(),
+                        null,
+                        ApplicationType.PROGRAM,
+                        ApplicationStatus.PENDING,
+                        PROGRAM_TITLE_SNAPSHOT,
+                        request.getFullName(),
+                        request.getEmail(),
+                        request.getPhone(),
+                        request.getCollege(),
+                        request.getGraduationYear(),
+                        uploadedResume.storageKey(),
+                        uploadedResume.fileUrl(),
+                        uploadedResume.originalName(),
+                        uploadedResume.mimeType(),
+                        uploadedResume.sizeBytes(),
+                        null,
+                        false,
+                        null
+                );
+
+        application.setSource(source);
+
+        Application saved =
+                applicationRepository.save(application);
+
+        if (outreach != null) {
+
+            outreach.linkApplication(saved);
+
+            candidateOutreachRepository.save(outreach);
+        }
 
         return applicationMapper.toCreatedResponse(saved);
     }
