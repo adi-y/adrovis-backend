@@ -1,6 +1,8 @@
 package com.adrovis.adrovis_backend.email.service;
 
 import com.adrovis.adrovis_backend.career.entity.Application;
+import com.adrovis.adrovis_backend.career.entity.CandidateOutreach;
+import com.adrovis.adrovis_backend.career.repository.CandidateOutreachRepository;
 import com.adrovis.adrovis_backend.email.config.MailProperties;
 import com.adrovis.adrovis_backend.interview.entity.Interview;
 import com.adrovis.adrovis_backend.payment.entity.PaymentTransaction;
@@ -26,6 +28,7 @@ import java.time.format.DateTimeFormatter;
 public class EmailServiceImpl implements EmailService {
 
     private final MailProperties mailProperties;
+    private final CandidateOutreachRepository candidateOutreachRepository;
 
     @Value("${app.candidate-portal-base-url:http://localhost:3000}")
     private String candidatePortalBaseUrl;
@@ -74,6 +77,61 @@ public class EmailServiceImpl implements EmailService {
         }
     }
 
+    @Async("emailTaskExecutor")
+    @Override
+    public void sendCandidateOutreachEmailAsync(
+            CandidateOutreach candidate
+    ) {
+
+        try {
+
+            String html = buildCandidateOutreachTemplate(candidate);
+
+            Resend resend =
+                    new Resend(mailProperties.getApiKey());
+
+            SendEmailRequest request =
+                    SendEmailRequest.builder()
+                            .from(
+                                    "Adrovis <"
+                                            + mailProperties.getFrom()
+                                            + ">"
+                            )
+                            .to(candidate.getEmail())
+                            .subject(
+                                    "Software Developer Internship Opportunity - Adrovis"
+                            )
+                            .html(html)
+                            .build();
+
+            var response =
+                    resend.emails().send(request);
+
+            candidate.markSent();
+            candidateOutreachRepository.save(candidate);
+
+            log.info(
+                    "Candidate outreach email sent successfully. " +
+                            "recipient={}, source={}, resendId={}",
+                    candidate.getEmail(),
+                    candidate.getSource(),
+                    response.getId()
+            );
+
+        } catch (ResendException | IOException ex) {
+
+            candidate.markFailed();
+            candidateOutreachRepository.save(candidate);
+
+            log.error(
+                    "Failed to send candidate outreach email. " +
+                            "recipient={}, source={}",
+                    candidate.getEmail(),
+                    candidate.getSource(),
+                    ex
+            );
+        }
+    }
     private String buildPaymentLinkTemplate(
             Application application,
             PaymentTransaction payment
@@ -755,5 +813,35 @@ public class EmailServiceImpl implements EmailService {
 
     private String nullToEmpty(String value) {
         return value == null ? "" : value;
+    }
+
+    private String buildCandidateOutreachTemplate(
+            CandidateOutreach candidate
+    ) throws IOException {
+
+        ClassPathResource resource =
+                new ClassPathResource(
+                        "email/CandidateOutreachEmail.html"
+                );
+
+        String html =
+                new String(
+                        resource.getInputStream().readAllBytes(),
+                        StandardCharsets.UTF_8
+                );
+
+        String applyLink =
+                candidatePortalBaseUrl
+                        + "/careers/ase-program";
+
+        return html
+                .replace(
+                        "{{name}}",
+                        candidate.getName()
+                )
+                .replace(
+                        "{{applyLink}}",
+                        applyLink
+                );
     }
 }

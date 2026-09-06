@@ -52,6 +52,9 @@ public class Application extends BaseAuditableEntity {
     @Column(nullable = false, length = 255)
     private String applicantEmail;
 
+    @Column(nullable = false, length = 50)
+    private String source = "WEBSITE";
+
     @Column(length = 20)
     private String applicantPhone;
 
@@ -156,5 +159,11 @@ public class Application extends BaseAuditableEntity {
             throw new IllegalArgumentException("Application status cannot be null.");
         }
         this.applicationStatus = applicationStatus;
+    }
+
+    public void setSource(String source) {
+        this.source = (source == null || source.isBlank())
+                ? "WEBSITE"
+                : source.trim().toUpperCase();
     }
 }
