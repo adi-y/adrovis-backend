@@ -184,6 +184,25 @@ emailService.sendApplicationShortlistedEmailAsync(application);
                 application
         );
     }
+    @Override
+    public void sendInternshipApplicationDetails(
+            String applicationId
+    ) {
+
+        Application application =
+                applicationRepository
+                        .findByApplicationId(applicationId)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Application not found with applicationId: "
+                                                + applicationId
+                                )
+                        );
+
+        emailService.sendInternshipApplicationDetailsEmailAsync(
+                application
+        );
+    }
 
     private Job findJob(UUID jobId) {
 

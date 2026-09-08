@@ -33,4 +33,6 @@ public interface ApplicationService {
     );
 
     void sendInternshipPaymentFollowUp(String applicationId);
+
+    void sendInternshipApplicationDetails(String applicationId);
 }

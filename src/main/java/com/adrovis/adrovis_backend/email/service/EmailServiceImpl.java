@@ -79,6 +79,61 @@ public class EmailServiceImpl implements EmailService {
 
     @Async("emailTaskExecutor")
     @Override
+    public void sendInternshipApplicationDetailsEmailAsync(
+            Application application
+    ) {
+
+        try {
+
+            String html =
+                    buildInternshipApplicationDetailsTemplate(
+                            application
+                    );
+
+            Resend resend =
+                    new Resend(
+                            mailProperties.getApiKey()
+                    );
+
+            SendEmailRequest request =
+                    SendEmailRequest.builder()
+                            .from(
+                                    "Adrovis <"
+                                            + mailProperties.getFrom()
+                                            + ">"
+                            )
+                            .to(application.getApplicantEmail())
+                            .subject(
+                                    "Your ADROVIS Internship Application – Next Steps"
+                            )
+                            .html(html)
+                            .build();
+
+            var response =
+                    resend.emails().send(request);
+
+            log.info(
+                    "Internship application details email sent successfully. " +
+                            "recipient={}, applicationId={}, resendId={}",
+                    application.getApplicantEmail(),
+                    application.getApplicationId(),
+                    response.getId()
+            );
+
+        } catch (ResendException | IOException ex) {
+
+            log.error(
+                    "Failed to send internship application details email. " +
+                            "recipient={}, applicationId={}",
+                    application.getApplicantEmail(),
+                    application.getApplicationId(),
+                    ex
+            );
+        }
+    }
+
+    @Async("emailTaskExecutor")
+    @Override
     public void sendCandidateOutreachEmailAsync(
             CandidateOutreach candidate
     ) {
@@ -651,6 +706,27 @@ public class EmailServiceImpl implements EmailService {
                 .replace("{{name}}", application.getApplicantName())
                 .replace("{{applicationId}}", application.getApplicationId())
                 .replace("{{program}}", application.getJobTitleSnapshot());
+    }
+
+    private String buildInternshipApplicationDetailsTemplate(
+            Application application
+    ) throws IOException {
+
+        ClassPathResource resource =
+                new ClassPathResource(
+                        "email/InternshipApplicationReceivedDetails.html"
+                );
+
+        String html =
+                new String(
+                        resource.getInputStream().readAllBytes(),
+                        StandardCharsets.UTF_8
+                );
+
+        return html.replace(
+                "{{name}}",
+                application.getApplicantName()
+        );
     }
 
     private String buildApplicationShortlistedTemplate(Application application)

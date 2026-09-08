@@ -141,4 +141,22 @@ public class ApplicationController {
                 )
         );
     }
+
+    @PostMapping("/{applicationId}/internship-application-details")
+    public ResponseEntity<ApiResponse<Void>> sendInternshipApplicationDetails(
+            @PathVariable String applicationId
+    ) {
+
+        applicationService.sendInternshipApplicationDetails(
+                applicationId
+        );
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        HttpStatus.OK,
+                        "Internship application details email sent successfully.",
+                        null
+                )
+        );
+    }
 }
