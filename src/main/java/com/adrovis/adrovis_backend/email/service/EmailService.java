@@ -9,6 +9,8 @@ public interface EmailService {
 
     void sendApplicationReceivedEmailAsync(Application application);
 
+    void sendInternshipApplicationDetailsEmailAsync(Application application);
+
     void sendApplicationShortlistedEmailAsync(Application application);
 
     void sendApplicationRejectedEmailAsync(Application application);
