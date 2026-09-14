@@ -28,6 +28,32 @@ logging:
     com.adrovis.adrovis_backend.interview: DEBUG
 
 app:
+  campaign:
+    public-base-url: ${CAMPAIGN_PUBLIC_BASE_URL:https://www.adrovis.com}
+    frontend-base-url: ${CAMPAIGN_FRONTEND_BASE_URL:http://localhost:5173}
+    continuation-secret: ${CAMPAIGN_TOKEN_SECRET:${JWT_SECRET}}
+    reply-to-email: ${CAMPAIGN_REPLY_TO_EMAIL:aditya.yadav@adrovis.com}
+    continuation-validity-hours: ${CAMPAIGN_CONTINUATION_VALIDITY_HOURS:720}
+    program-key: ${CAMPAIGN_PROGRAM_KEY:SOFTWARE_DEVELOPER_INTERNSHIP}
+
+    # MASTER CAMPAIGN SWITCH
+    # true = dispatcher is allowed to run
+    enabled: ${CAMPAIGN_ENABLED:true}
+
+    # TEST MODE
+    # true = ONLY test-email is processed
+    test-mode: ${CAMPAIGN_TEST_MODE:true}
+    test-email: ${CAMPAIGN_TEST_EMAIL}
+
+    # TEST = 2 minutes between campaign weeks
+    scheduler-delay-ms: ${CAMPAIGN_SCHEDULER_DELAY_MS:120000}
+    week-duration-seconds: ${CAMPAIGN_WEEK_DURATION_SECONDS:120}
+
+    # Normal production send configuration
+    daily-send-time: ${CAMPAIGN_DAILY_SEND_TIME:10:00}
+    timezone: ${CAMPAIGN_TIMEZONE:Asia/Kolkata}
+    batch-size: ${CAMPAIGN_BATCH_SIZE:500}
+
   gemini:
     api-key: ${GEMINI_API_KEY}
     model: ${GEMINI_MODEL:gemini-3.6-flash}

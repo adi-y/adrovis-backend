@@ -123,4 +123,40 @@ public class ApplicationController {
                 )
         );
     }
+
+    @PostMapping("/{applicationId}/payment-follow-up")
+    public ResponseEntity<ApiResponse<Void>> sendInternshipPaymentFollowUp(
+            @PathVariable String applicationId
+    ) {
+
+        applicationService.sendInternshipPaymentFollowUp(
+                applicationId
+        );
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        HttpStatus.OK,
+                        "Internship follow-up email sent successfully.",
+                        null
+                )
+        );
+    }
+
+    @PostMapping("/{applicationId}/internship-application-details")
+    public ResponseEntity<ApiResponse<Void>> sendInternshipApplicationDetails(
+            @PathVariable String applicationId
+    ) {
+
+        applicationService.sendInternshipApplicationDetails(
+                applicationId
+        );
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        HttpStatus.OK,
+                        "Internship application details email sent successfully.",
+                        null
+                )
+        );
+    }
 }

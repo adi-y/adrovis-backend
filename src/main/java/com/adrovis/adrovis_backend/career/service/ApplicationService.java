@@ -32,5 +32,7 @@ public interface ApplicationService {
             UpdateApplicationStatusRequest request
     );
 
+    void sendInternshipPaymentFollowUp(String applicationId);
 
+    void sendInternshipApplicationDetails(String applicationId);
 }

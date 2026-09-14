@@ -3,10 +3,13 @@ package com.adrovis.adrovis_backend.email.service;
 import com.adrovis.adrovis_backend.career.entity.Application;
 import com.adrovis.adrovis_backend.interview.entity.Interview;
 import com.adrovis.adrovis_backend.payment.entity.PaymentTransaction;
+import com.adrovis.adrovis_backend.career.entity.CandidateOutreach;
 
 public interface EmailService {
 
     void sendApplicationReceivedEmailAsync(Application application);
+
+    void sendInternshipApplicationDetailsEmailAsync(Application application);
 
     void sendApplicationShortlistedEmailAsync(Application application);
 
@@ -29,4 +32,13 @@ public interface EmailService {
             Application application,
             PaymentTransaction payment
     );
+
+    void sendInternshipPaymentFollowUpEmailAsync(
+            Application application
+    );
+
+    void sendCandidateOutreachEmailAsync(
+            CandidateOutreach candidate
+    );
+
 }

@@ -1,6 +1,11 @@
 package com.adrovis.adrovis_backend.email.service;
 
+import com.adrovis.adrovis_backend.campaign.service.CampaignEnrollmentService;
+import com.adrovis.adrovis_backend.candidate.entity.Candidate;
+import com.adrovis.adrovis_backend.candidate.service.CandidateService;
 import com.adrovis.adrovis_backend.career.entity.Application;
+import com.adrovis.adrovis_backend.career.entity.CandidateOutreach;
+import com.adrovis.adrovis_backend.career.repository.CandidateOutreachRepository;
 import com.adrovis.adrovis_backend.email.config.MailProperties;
 import com.adrovis.adrovis_backend.interview.entity.Interview;
 import com.adrovis.adrovis_backend.payment.entity.PaymentTransaction;
@@ -26,6 +31,9 @@ import java.time.format.DateTimeFormatter;
 public class EmailServiceImpl implements EmailService {
 
     private final MailProperties mailProperties;
+    private final CandidateOutreachRepository candidateOutreachRepository;
+    private final CampaignEnrollmentService campaignEnrollmentService;
+    private final CandidateService candidateService;
 
     @Value("${app.candidate-portal-base-url:http://localhost:3000}")
     private String candidatePortalBaseUrl;
@@ -74,6 +82,130 @@ public class EmailServiceImpl implements EmailService {
         }
     }
 
+    @Async("emailTaskExecutor")
+    @Override
+    public void sendInternshipApplicationDetailsEmailAsync(
+            Application application
+    ) {
+
+        try {
+
+            String html =
+                    buildInternshipApplicationDetailsTemplate(
+                            application
+                    );
+
+            Resend resend =
+                    new Resend(
+                            mailProperties.getApiKey()
+                    );
+
+            SendEmailRequest request =
+                    SendEmailRequest.builder()
+                            .from(
+                                    "Adrovis <"
+                                            + mailProperties.getFrom()
+                                            + ">"
+                            )
+                            .to(application.getApplicantEmail())
+                            .subject(
+                                    "Your ADROVIS Internship Application – Next Steps"
+                            )
+                            .html(html)
+                            .build();
+
+            var response =
+                    resend.emails().send(request);
+
+            log.info(
+                    "Internship application details email sent successfully. " +
+                            "recipient={}, applicationId={}, resendId={}",
+                    application.getApplicantEmail(),
+                    application.getApplicationId(),
+                    response.getId()
+            );
+
+        } catch (ResendException | IOException ex) {
+
+            log.error(
+                    "Failed to send internship application details email. " +
+                            "recipient={}, applicationId={}",
+                    application.getApplicantEmail(),
+                    application.getApplicationId(),
+                    ex
+            );
+        }
+    }
+
+    @Async("emailTaskExecutor")
+    @Override
+    public void sendCandidateOutreachEmailAsync(
+            CandidateOutreach candidate
+    ) {
+
+        try {
+
+            String html = buildCandidateOutreachTemplate(candidate);
+
+            Resend resend =
+                    new Resend(mailProperties.getApiKey());
+
+            SendEmailRequest request =
+                    SendEmailRequest.builder()
+                            .from(
+                                    "Adrovis <"
+                                            + mailProperties.getFrom()
+                                            + ">"
+                            )
+                            .to(candidate.getEmail())
+                            .subject(
+                                    "Software Developer Internship Opportunity - Adrovis"
+                            )
+                            .html(html)
+                            .build();
+
+            var response =
+                    resend.emails().send(request);
+
+            candidate.markSent();
+            candidateOutreachRepository.save(candidate);
+
+            if (candidate.getJobId() == null) {
+
+                Candidate campaignCandidate =
+                        candidateService.getOrCreate(
+                                candidate.getName(),
+                                candidate.getEmail()
+                        );
+
+                campaignEnrollmentService.enrollOutreach(
+                        campaignCandidate,
+                        candidate.getOutreachSentAt()
+                );
+            }
+
+            log.info(
+                    "Candidate outreach email sent successfully. " +
+                            "recipient={}, source={}, resendId={}",
+                    candidate.getEmail(),
+                    candidate.getSource(),
+                    response.getId()
+            );
+
+        } catch (ResendException | IOException ex) {
+
+            candidate.markFailed();
+            candidateOutreachRepository.save(candidate);
+
+            log.error(
+                    "Failed to send candidate outreach email. " +
+                            "recipient={}, source={}",
+                    candidate.getEmail(),
+                    candidate.getSource(),
+                    ex
+            );
+        }
+    }
     private String buildPaymentLinkTemplate(
             Application application,
             PaymentTransaction payment
@@ -112,6 +244,28 @@ public class EmailServiceImpl implements EmailService {
                 .replace(
                         "{{paymentLink}}",
                         payment.getPaymentLinkUrl()
+                );
+    }
+
+    private String buildInternshipPaymentFollowUpTemplate(
+            Application application
+    ) throws IOException {
+
+        ClassPathResource resource =
+                new ClassPathResource(
+                        "email/InternshipPaymentFollowUp.html"
+                );
+
+        String html =
+                new String(
+                        resource.getInputStream().readAllBytes(),
+                        StandardCharsets.UTF_8
+                );
+
+        return html
+                .replace(
+                        "{{firstName}}",
+                        application.getApplicantName()
                 );
     }
 
@@ -248,6 +402,61 @@ public class EmailServiceImpl implements EmailService {
                     application.getApplicantEmail(),
                     application.getApplicationId(),
                     payment.getReferenceId(),
+                    ex
+            );
+        }
+    }
+
+    @Async("emailTaskExecutor")
+    @Override
+    public void sendInternshipPaymentFollowUpEmailAsync(
+            Application application
+    ) {
+
+        try {
+
+            String html =
+                    buildInternshipPaymentFollowUpTemplate(
+                            application
+                    );
+
+            Resend resend =
+                    new Resend(
+                            mailProperties.getApiKey()
+                    );
+
+            SendEmailRequest request =
+                    SendEmailRequest.builder()
+                            .from(
+                                    "Adrovis <"
+                                            + mailProperties.getFrom()
+                                            + ">"
+                            )
+                            .to(application.getApplicantEmail())
+                            .subject(
+                                    "Follow-Up Regarding Your Adrovis Internship"
+                            )
+                            .html(html)
+                            .build();
+
+            var response =
+                    resend.emails().send(request);
+
+            log.info(
+                    "Internship follow-up email sent successfully. " +
+                            "recipient={}, applicationId={}, resendId={}",
+                    application.getApplicantEmail(),
+                    application.getApplicationId(),
+                    response.getId()
+            );
+
+        } catch (ResendException | IOException ex) {
+
+            log.error(
+                    "Failed to send internship follow-up email. " +
+                            "recipient={}, applicationId={}",
+                    application.getApplicantEmail(),
+                    application.getApplicationId(),
                     ex
             );
         }
@@ -518,6 +727,27 @@ public class EmailServiceImpl implements EmailService {
                 .replace("{{program}}", application.getJobTitleSnapshot());
     }
 
+    private String buildInternshipApplicationDetailsTemplate(
+            Application application
+    ) throws IOException {
+
+        ClassPathResource resource =
+                new ClassPathResource(
+                        "email/InternshipApplicationReceivedDetails.html"
+                );
+
+        String html =
+                new String(
+                        resource.getInputStream().readAllBytes(),
+                        StandardCharsets.UTF_8
+                );
+
+        return html.replace(
+                "{{name}}",
+                application.getApplicantName()
+        );
+    }
+
     private String buildApplicationShortlistedTemplate(Application application)
             throws IOException {
 
@@ -678,5 +908,35 @@ public class EmailServiceImpl implements EmailService {
 
     private String nullToEmpty(String value) {
         return value == null ? "" : value;
+    }
+
+    private String buildCandidateOutreachTemplate(
+            CandidateOutreach candidate
+    ) throws IOException {
+
+        ClassPathResource resource =
+                new ClassPathResource(
+                        "email/CandidateOutreachEmail.html"
+                );
+
+        String html =
+                new String(
+                        resource.getInputStream().readAllBytes(),
+                        StandardCharsets.UTF_8
+                );
+
+        String applyLink =
+                candidatePortalBaseUrl
+                        + "/careers/ase-program";
+
+        return html
+                .replace(
+                        "{{name}}",
+                        candidate.getName()
+                )
+                .replace(
+                        "{{applyLink}}",
+                        applyLink
+                );
     }
 }

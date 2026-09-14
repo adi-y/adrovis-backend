@@ -3,6 +3,7 @@ package com.adrovis.adrovis_backend.career.repository;
 import com.adrovis.adrovis_backend.career.entity.Application;
 import com.adrovis.adrovis_backend.career.entity.Job;
 import com.adrovis.adrovis_backend.career.enums.ApplicationStatus;
+import com.adrovis.adrovis_backend.career.enums.ApplicationType;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -23,5 +24,23 @@ public interface ApplicationRepository extends JpaRepository<Application, UUID> 
             String applicantEmail,
             Job job
     );
+
+    boolean existsByApplicantEmailIgnoreCase(String applicantEmail);
+
+
+    List<Application> findAllByApplicationType(ApplicationType applicationType);
+
+    boolean existsByApplicantEmailIgnoreCaseAndApplicationType(
+            String applicantEmail,
+            ApplicationType applicationType
+    );
+
+    Optional<Application>
+    findTopByApplicantEmailIgnoreCaseAndApplicationTypeOrderByCreatedAtDesc(
+            String applicantEmail,
+            ApplicationType applicationType
+    );
+
+
 
 }

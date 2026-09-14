@@ -40,6 +40,33 @@ supabase:
   bucket: ${SUPABASE_BUCKET:resumes}
 
 app:
+  campaign:
+    public-base-url: ${CAMPAIGN_PUBLIC_BASE_URL:https://www.adrovis.com}
+    frontend-base-url: ${CAMPAIGN_FRONTEND_BASE_URL:https://www.adrovis.com}
+    continuation-secret: ${CAMPAIGN_TOKEN_SECRET:${JWT_SECRET}}
+    reply-to-email: ${CAMPAIGN_REPLY_TO_EMAIL:hello@adrovis.com}
+    continuation-validity-hours: ${CAMPAIGN_CONTINUATION_VALIDITY_HOURS:720}
+    program-key: ${CAMPAIGN_PROGRAM_KEY:SOFTWARE_DEVELOPER_INTERNSHIP}
+
+    # MASTER CAMPAIGN SWITCH
+    # Keep FALSE until production testing is complete.
+    enabled: ${CAMPAIGN_ENABLED:false}
+
+    # PRODUCTION
+    # Must be FALSE so the real production audience is used.
+    test-mode: ${CAMPAIGN_TEST_MODE:false}
+    test-email: ${CAMPAIGN_TEST_EMAIL:}
+
+    # PRODUCTION: scheduler checks every hour
+    scheduler-delay-ms: ${CAMPAIGN_SCHEDULER_DELAY_MS:3600000}
+
+    # PRODUCTION: 7 days between campaign weeks
+    week-duration-seconds: ${CAMPAIGN_WEEK_DURATION_SECONDS:604800}
+
+    daily-send-time: ${CAMPAIGN_DAILY_SEND_TIME:10:00}
+    timezone: ${CAMPAIGN_TIMEZONE:Asia/Kolkata}
+    batch-size: ${CAMPAIGN_BATCH_SIZE:500}
+
   gemini:
     api-key: ${GEMINI_API_KEY}
     model: ${GEMINI_MODEL:gemini-3.6-flash}
