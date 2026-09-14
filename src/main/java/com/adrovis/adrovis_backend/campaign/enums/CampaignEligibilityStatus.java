@@ -1,0 +1,18 @@
+package com.adrovis.adrovis_backend.campaign.enums;
+
+public enum CampaignEligibilityStatus {
+
+    ELIGIBLE,
+    UNSUBSCRIBED,
+    APPLICATION_PENDING,
+    APPLICATION_SUBMITTED,
+    APPLICATION_UNDER_REVIEW,
+    APPLICATION_SHORTLISTED,
+    APPLICATION_INTERVIEW,
+    APPLICATION_HIRED,
+    APPLICATION_REJECTED,
+    INTERESTED,
+    ALREADY_SENT,
+    CAMPAIGN_CLOSED,
+    NOT_ELIGIBLE
+}

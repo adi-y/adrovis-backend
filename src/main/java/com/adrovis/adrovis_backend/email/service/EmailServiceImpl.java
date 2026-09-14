@@ -1,5 +1,8 @@
 package com.adrovis.adrovis_backend.email.service;
 
+import com.adrovis.adrovis_backend.campaign.service.CampaignEnrollmentService;
+import com.adrovis.adrovis_backend.candidate.entity.Candidate;
+import com.adrovis.adrovis_backend.candidate.service.CandidateService;
 import com.adrovis.adrovis_backend.career.entity.Application;
 import com.adrovis.adrovis_backend.career.entity.CandidateOutreach;
 import com.adrovis.adrovis_backend.career.repository.CandidateOutreachRepository;
@@ -29,6 +32,8 @@ public class EmailServiceImpl implements EmailService {
 
     private final MailProperties mailProperties;
     private final CandidateOutreachRepository candidateOutreachRepository;
+    private final CampaignEnrollmentService campaignEnrollmentService;
+    private final CandidateService candidateService;
 
     @Value("${app.candidate-portal-base-url:http://localhost:3000}")
     private String candidatePortalBaseUrl;
@@ -164,6 +169,20 @@ public class EmailServiceImpl implements EmailService {
 
             candidate.markSent();
             candidateOutreachRepository.save(candidate);
+
+            if (candidate.getJobId() == null) {
+
+                Candidate campaignCandidate =
+                        candidateService.getOrCreate(
+                                candidate.getName(),
+                                candidate.getEmail()
+                        );
+
+                campaignEnrollmentService.enrollOutreach(
+                        campaignCandidate,
+                        candidate.getOutreachSentAt()
+                );
+            }
 
             log.info(
                     "Candidate outreach email sent successfully. " +

@@ -3,6 +3,7 @@ package com.adrovis.adrovis_backend.career.controller;
 import com.adrovis.adrovis_backend.career.dto.request.ProgramApplicationCreateRequest;
 import com.adrovis.adrovis_backend.career.dto.request.ProgramApplicationSubmitRequest;
 import com.adrovis.adrovis_backend.career.dto.response.ApplicationCreatedResponse;
+import com.adrovis.adrovis_backend.career.dto.response.ProgramApplicationContinuationResponse;
 import com.adrovis.adrovis_backend.career.service.ProgramApplicationService;
 import com.adrovis.adrovis_backend.common.dto.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -121,6 +122,134 @@ public class ProgramApplicationController {
     ) {
 
         programApplicationService.submit(applicationId, request);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        HttpStatus.OK,
+                        "Application submitted successfully.",
+                        null
+                )
+        );
+    }
+
+    /*
+     * -------------------------------------------------------------------------
+     * EXISTING APPLICATION CONTINUATION FLOW
+     * -------------------------------------------------------------------------
+     */
+
+    @GetMapping("/{applicationId}/continue")
+    @Operation(
+            summary = "Validate and load pending application continuation",
+            description = """
+                    Validates the continuation token for a pending program
+                    application and returns the information required to
+                    continue the application.
+                    """
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "Application continuation validated successfully"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid or expired continuation token",
+                    content = @Content
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "Application not found",
+                    content = @Content
+            )
+    })
+    public ResponseEntity<
+            ApiResponse<ProgramApplicationContinuationResponse>
+            > getContinuation(
+
+            @Parameter(
+                    description = "Human-readable application ID",
+                    required = true,
+                    example = "APP202600001"
+            )
+            @PathVariable String applicationId,
+
+            @Parameter(
+                    description = "Continuation token generated for the application",
+                    required = true
+            )
+            @RequestParam String token
+    ) {
+
+        ProgramApplicationContinuationResponse result =
+                programApplicationService.getContinuation(
+                        applicationId,
+                        token
+                );
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        HttpStatus.OK,
+                        "Application continuation validated successfully.",
+                        result
+                )
+        );
+    }
+
+    @PatchMapping("/{applicationId}/continue/submit")
+    @Operation(
+            summary = "Submit pending application continuation",
+            description = """
+                    Validates the continuation token and submits a previously
+                    created pending program application after the applicant
+                    accepts the terms and conditions.
+                    """
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "Application submitted successfully"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid or expired continuation token",
+                    content = @Content
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "Application not found",
+                    content = @Content
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "409",
+                    description = "Application has already been submitted",
+                    content = @Content
+            )
+    })
+    public ResponseEntity<ApiResponse<Void>> submitContinuation(
+
+            @Parameter(
+                    description = "Human-readable application ID",
+                    required = true,
+                    example = "APP202600001"
+            )
+            @PathVariable String applicationId,
+
+            @Parameter(
+                    description = "Continuation token generated for the application",
+                    required = true
+            )
+            @RequestParam String token,
+
+            @Valid
+            @RequestBody ProgramApplicationSubmitRequest request
+    ) {
+
+        programApplicationService.submitContinuation(
+                applicationId,
+                token,
+                request
+        );
 
         return ResponseEntity.ok(
                 ApiResponse.success(
