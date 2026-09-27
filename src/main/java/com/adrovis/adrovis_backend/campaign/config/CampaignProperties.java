@@ -15,6 +15,7 @@ public class CampaignProperties {
      * Kept for compatibility with existing campaign configuration.
      */
     private String baseUrl = "https://www.adrovis.com";
+
     private String frontendBaseUrl;
 
     /**
@@ -55,37 +56,21 @@ public class CampaignProperties {
     private String programKey = "SOFTWARE_DEVELOPER_INTERNSHIP";
 
     /**
-     * Scheduler polling interval.
+     * Campaign scheduler polling interval.
      *
      * Production default:
      * 1 hour.
-     *
-     * Test configuration:
-     * usually overridden to 2 minutes.
      */
     private long schedulerDelayMs = 3_600_000L;
 
     /**
      * Campaign safety switch.
-     *
-     * false:
-     * normal production audience is eligible for processing.
-     *
-     * true:
-     * ONLY testEmail is allowed to be processed by the automated
-     * campaign scheduler, and accelerated journey timing is used.
-     *
-     * IMPORTANT:
-     * This flag controls the campaign scheduler.
-     * It does not restrict the initial admin candidate-outreach API.
      */
     private boolean testMode = false;
 
     /**
      * The ONLY email address allowed to receive automated campaign
      * follow-ups while testMode=true.
-     *
-     * This should be explicitly configured in the environment.
      */
     private String testEmail;
 
@@ -93,35 +78,71 @@ public class CampaignProperties {
      * Duration of one campaign step.
      *
      * Production:
-     * Java campaign logic schedules steps using real calendar dates,
-     * so this value is not used as a one-week approximation.
+     * 7 days.
      *
      * Test:
-     * This is the accelerated duration between campaign weeks.
-     *
-     * Example:
-     * 120 seconds = 2 minutes per campaign step.
+     * accelerated duration.
      */
     private long weekDurationSeconds = 604_800L;
 
     /**
      * Production daily campaign send time in local campaign timezone.
-     *
-     * Default:
-     * 10:00 AM Asia/Kolkata.
      */
     private String dailySendTime = "10:00";
 
     /**
-     * Timezone used for production campaign scheduling.
+     * Timezone used for campaign scheduling and daily quota calculation.
      */
     private String timezone = "Asia/Kolkata";
 
     /**
      * Maximum number of candidate journeys processed in one scheduler pass.
-     *
-     * Prevents the scheduler from loading the complete campaign audience
-     * into memory at once.
      */
     private int batchSize = 500;
+
+    /**
+     * ================================================================
+     * BREVO CAMPAIGN DELIVERY CONFIGURATION
+     * ================================================================
+     */
+
+    /**
+     * Brevo API key used ONLY for campaign emails.
+     */
+    private String brevoApiKey;
+
+    /**
+     * Verified Brevo sender email.
+     *
+     * Example:
+     * hello@adrovis.com
+     */
+    private String brevoSenderEmail;
+
+    /**
+     * Sender display name.
+     */
+    private String brevoSenderName = "Adrovis";
+
+    /**
+     * Application-side daily campaign quota.
+     *
+     * Brevo Free plan currently provides 300 email sends/day.
+     */
+    private int brevoDailyQuota = 300;
+
+    /**
+     * Maximum number of campaign emails processed in one delivery pass.
+     *
+     * This should normally remain 300.
+     */
+    private int brevoDeliveryBatchSize = 300;
+
+    /**
+     * Delivery scheduler interval.
+     *
+     * Production default:
+     * 1 hour.
+     */
+    private long brevoDeliverySchedulerDelayMs = 3_600_000L;
 }

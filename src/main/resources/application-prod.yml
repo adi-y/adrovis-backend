@@ -65,7 +65,21 @@ app:
 
     daily-send-time: ${CAMPAIGN_DAILY_SEND_TIME:10:00}
     timezone: ${CAMPAIGN_TIMEZONE:Asia/Kolkata}
-    batch-size: ${CAMPAIGN_BATCH_SIZE:500}
+    batch-size: ${CAMPAIGN_BATCH_SIZE:300}
+
+    # BREVO CAMPAIGN DELIVERY
+    brevo-api-key: ${BREVO_API_KEY}
+    brevo-sender-email: ${BREVO_SENDER_EMAIL:hello@adrovis.com}
+    brevo-sender-name: ${BREVO_SENDER_NAME:Adrovis}
+
+    # Brevo Free plan application-side cap
+    brevo-daily-quota: ${BREVO_DAILY_QUOTA:300}
+
+    # Maximum campaign emails selected per delivery pass
+    brevo-delivery-batch-size: ${BREVO_DELIVERY_BATCH_SIZE:300}
+
+    # Check persistent campaign queue every hour
+    brevo-delivery-scheduler-delay-ms: ${BREVO_DELIVERY_SCHEDULER_DELAY_MS:3600000}
 
   gemini:
     api-key: ${GEMINI_API_KEY}

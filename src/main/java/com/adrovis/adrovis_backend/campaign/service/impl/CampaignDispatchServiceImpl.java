@@ -7,13 +7,11 @@ import com.adrovis.adrovis_backend.campaign.entity.CampaignRecipient;
 import com.adrovis.adrovis_backend.campaign.enums.CampaignEligibilityStatus;
 import com.adrovis.adrovis_backend.campaign.enums.CampaignEmailStatus;
 import com.adrovis.adrovis_backend.campaign.enums.CampaignEmailType;
-import com.adrovis.adrovis_backend.campaign.enums.CampaignJourneyStatus;
 import com.adrovis.adrovis_backend.campaign.repository.CampaignEmailRepository;
 import com.adrovis.adrovis_backend.campaign.repository.CampaignRecipientRepository;
 import com.adrovis.adrovis_backend.campaign.repository.CampaignRepository;
 import com.adrovis.adrovis_backend.campaign.service.CampaignDispatchService;
 import com.adrovis.adrovis_backend.campaign.service.CampaignEligibilityService;
-import com.adrovis.adrovis_backend.campaign.service.CampaignEmailService;
 import com.adrovis.adrovis_backend.campaign.service.CampaignLinkService;
 import com.adrovis.adrovis_backend.career.entity.Application;
 import com.adrovis.adrovis_backend.career.enums.ApplicationStatus;
@@ -22,8 +20,8 @@ import com.adrovis.adrovis_backend.career.repository.ApplicationRepository;
 import com.adrovis.adrovis_backend.candidate.entity.Candidate;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -49,9 +47,6 @@ public class CampaignDispatchServiceImpl
      *
      * false = no automated campaign processing.
      * true  = normal dispatcher behaviour, subject to testMode.
-     *
-     * This is read directly from configuration so CampaignProperties and
-     * CampaignScheduler do not need to change.
      */
     @Value("${app.campaign.enabled:false}")
     private boolean enabled;
@@ -63,7 +58,6 @@ public class CampaignDispatchServiceImpl
     private final ApplicationRepository applicationRepository;
     private final CampaignEligibilityService eligibilityService;
     private final CampaignLinkService linkService;
-    private final CampaignEmailService emailService;
 
     @Override
     public void dispatchDueRecipients() {
@@ -91,6 +85,7 @@ public class CampaignDispatchServiceImpl
     public void dispatchDueRecipients(
             UUID campaignId
     ) {
+
         if (!enabled) {
             return;
         }
@@ -155,11 +150,13 @@ public class CampaignDispatchServiceImpl
         for (CampaignRecipient recipient : recipients) {
 
             try {
+
                 dispatchOne(
                         campaign,
                         recipient,
                         now
                 );
+
             } catch (RuntimeException ex) {
 
                 log.error(
@@ -177,6 +174,7 @@ public class CampaignDispatchServiceImpl
             CampaignRecipient recipient,
             Instant now
     ) {
+
         Candidate candidate =
                 recipient.getCandidate();
 
@@ -221,8 +219,11 @@ public class CampaignDispatchServiceImpl
                 recipient.getCurrentWeek() + 1;
 
         if (nextWeek > 4) {
+
             recipient.markCompleted();
+
             recipientRepository.save(recipient);
+
             return;
         }
 
@@ -283,9 +284,7 @@ public class CampaignDispatchServiceImpl
 
                 recipient.advanceAfterSuppression(
                         nextWeek,
-                        calculateNextWeekSendAt(
-                                now
-                        )
+                        calculateNextWeekSendAt(now)
                 );
             }
 
@@ -313,24 +312,42 @@ public class CampaignDispatchServiceImpl
                                 )
                         );
 
+        /*
+         * SENT means this campaign step was already delivered.
+         */
         if (email.getStatus() == CampaignEmailStatus.SENT) {
             return;
         }
 
+        /*
+         * Legacy FAILED emails are intentionally NOT re-created here.
+         *
+         * They remain in the DB and are picked up by the Brevo delivery
+         * scheduler through the repository's QUEUED + FAILED query.
+         */
         if (email.getStatus() == CampaignEmailStatus.FAILED) {
             return;
         }
 
         /*
          * Queue exactly one row for this candidate + journey + week.
-         * Database uniqueness protects against duplicate scheduler execution.
+         *
+         * IMPORTANT:
+         * There is NO provider call here anymore.
+         *
+         * The CampaignEmail row is persisted as QUEUED and the separate
+         * CampaignDeliveryScheduler is responsible for sending it through
+         * Brevo according to the daily quota.
          */
         try {
+
             emailRepository.saveAndFlush(email);
+
         } catch (DataIntegrityViolationException ex) {
 
             log.debug(
-                    "Campaign email already queued by another dispatcher. recipientId={}, journeyVersion={}, week={}",
+                    "Campaign email already queued by another dispatcher. " +
+                            "recipientId={}, journeyVersion={}, week={}",
                     recipient.getId(),
                     recipient.getJourneyVersion(),
                     nextWeek
@@ -342,26 +359,36 @@ public class CampaignDispatchServiceImpl
         recipient.markContacted();
 
         if (nextWeek >= 4) {
+
             recipient.markCompleted();
+
         } else {
+
             recipient.advanceAfterAttempt(
                     nextWeek,
                     calculateNextWeekSendAt(now)
             );
         }
 
-        /*
-         * Mark the row queued before leaving the transaction.
-         * The async sender owns provider delivery state.
-         */
         recipientRepository.save(recipient);
 
-        emailService.sendAsync(email);
+        log.debug(
+                "Campaign email queued for Brevo delivery. " +
+                        "campaignId={}, emailId={}, recipientId={}, " +
+                        "candidateId={}, week={}, journeyVersion={}",
+                campaign.getId(),
+                email.getId(),
+                recipient.getId(),
+                candidate.getId(),
+                nextWeek,
+                recipient.getJourneyVersion()
+        );
     }
 
     private boolean isSendable(
             CampaignEligibilityStatus status
     ) {
+
         return status
                 == CampaignEligibilityStatus.ELIGIBLE
                 || status
@@ -410,13 +437,16 @@ public class CampaignDispatchServiceImpl
     ) {
 
         if (properties.isTestMode()) {
+
             return source.plusSeconds(
                     properties.getWeekDurationSeconds()
             );
         }
 
         ZoneId zone =
-                ZoneId.of(properties.getTimezone());
+                ZoneId.of(
+                        properties.getTimezone()
+                );
 
         ZonedDateTime current =
                 source.atZone(zone);
@@ -441,7 +471,9 @@ public class CampaignDispatchServiceImpl
     private CampaignEmailType emailTypeFor(
             int week
     ) {
+
         return switch (week) {
+
             case 1 ->
                     CampaignEmailType.WEEK_1_REENGAGEMENT;
 
@@ -464,6 +496,7 @@ public class CampaignDispatchServiceImpl
     private String subjectFor(
             CampaignEmailType type
     ) {
+
         return switch (type) {
 
             case WEEK_1_REENGAGEMENT ->
@@ -483,6 +516,7 @@ public class CampaignDispatchServiceImpl
     private String templateFor(
             CampaignEmailType type
     ) {
+
         return type.name();
     }
 
@@ -490,11 +524,13 @@ public class CampaignDispatchServiceImpl
             Candidate candidate,
             Application application
     ) {
+
         /*
          * No application:
          * normal internship application page.
          */
         if (application == null) {
+
             return frontendBaseUrl()
                     + "/careers/internship";
         }
@@ -552,30 +588,42 @@ public class CampaignDispatchServiceImpl
     }
 
     private String frontendBaseUrl() {
+
         String configuredFrontend =
                 properties.getFrontendBaseUrl();
 
         if (configuredFrontend != null
                 && !configuredFrontend.isBlank()) {
-            return trimTrailingSlash(configuredFrontend);
+
+            return trimTrailingSlash(
+                    configuredFrontend
+            );
         }
 
-        return trimTrailingSlash(properties.getBaseUrl());
+        return trimTrailingSlash(
+                properties.getBaseUrl()
+        );
     }
 
     private String trimTrailingSlash(
             String value
     ) {
+
         if (value == null || value.isBlank()) {
+
             return "https://www.adrovis.com";
         }
 
-        return value.replaceAll("/+$", "");
+        return value.replaceAll(
+                "/+$",
+                ""
+        );
     }
 
     private String unsubscribeUrl(
             Candidate candidate
     ) {
+
         String token =
                 linkService.generateUnsubscribeToken(
                         candidate.getId()
@@ -589,6 +637,7 @@ public class CampaignDispatchServiceImpl
     private String normalize(
             String email
     ) {
+
         return email == null
                 ? ""
                 : email.trim().toLowerCase();
@@ -597,6 +646,7 @@ public class CampaignDispatchServiceImpl
     private String url(
             String value
     ) {
+
         return URLEncoder.encode(
                 value,
                 StandardCharsets.UTF_8

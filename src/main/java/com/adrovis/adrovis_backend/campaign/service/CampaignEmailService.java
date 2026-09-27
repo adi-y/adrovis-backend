@@ -4,5 +4,5 @@ import com.adrovis.adrovis_backend.campaign.entity.CampaignEmail;
 
 public interface CampaignEmailService {
 
-    void sendAsync(CampaignEmail campaignEmail);
+    void sendThroughBrevo(CampaignEmail campaignEmail);
 }
