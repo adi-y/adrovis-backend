@@ -2,23 +2,27 @@ package com.adrovis.adrovis_backend.campaign.service.impl;
 
 import com.adrovis.adrovis_backend.campaign.config.CampaignProperties;
 import com.adrovis.adrovis_backend.campaign.entity.CampaignEmail;
+import com.adrovis.adrovis_backend.campaign.enums.CampaignEmailStatus;
 import com.adrovis.adrovis_backend.campaign.enums.CampaignJourneyType;
 import com.adrovis.adrovis_backend.campaign.repository.CampaignEmailRepository;
 import com.adrovis.adrovis_backend.campaign.service.CampaignEmailService;
 import com.adrovis.adrovis_backend.campaign.service.CampaignLinkService;
 import com.adrovis.adrovis_backend.career.entity.Application;
 import com.adrovis.adrovis_backend.career.repository.ApplicationRepository;
-import com.adrovis.adrovis_backend.email.config.MailProperties;
-import com.resend.Resend;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 
 @Service
@@ -26,6 +30,9 @@ import java.nio.charset.StandardCharsets;
 @Slf4j
 public class CampaignEmailServiceImpl
         implements CampaignEmailService {
+
+    private static final String BREVO_SEND_URL =
+            "https://api.brevo.com/v3/smtp/email";
 
     private static final String OUTREACH_TEMPLATE =
             "email/campaign/campaign/CandidateOutreachFollowUpEmail.html";
@@ -35,95 +42,108 @@ public class CampaignEmailServiceImpl
 
     private final CampaignEmailRepository campaignEmailRepository;
 
-    private final MailProperties mailProperties;
-
     private final CampaignLinkService campaignLinkService;
 
     private final CampaignProperties campaignProperties;
 
     private final ApplicationRepository applicationRepository;
 
-    @Async("emailTaskExecutor")
-    @Transactional
+    private final ObjectMapper objectMapper;
+
+    private final HttpClient httpClient =
+            HttpClient.newBuilder()
+                    .build();
+
+    /**
+     * Sends exactly one campaign email through Brevo.
+     *
+     * IMPORTANT:
+     *
+     * - This method is called by CampaignDeliveryService.
+     * - It is intentionally NOT @Async.
+     * - Delivery is sequential so the application-side 300/day quota
+     *   cannot be accidentally exceeded by concurrent sends.
+     * - QUEUED emails are sent normally.
+     * - Legacy FAILED emails are also allowed because they represent
+     *   campaign emails that previously failed through the old Resend path.
+     * - New Brevo failures are NOT marked FAILED.
+     *   They remain QUEUED and will be picked up again later.
+     */
     @Override
-    public void sendAsync(
+    @Transactional
+    public void sendThroughBrevo(
             CampaignEmail campaignEmail
     ) {
 
-        if (campaignEmail == null || campaignEmail.getId() == null) {
+        if (campaignEmail == null
+                || campaignEmail.getId() == null) {
+
             log.warn(
                     "Campaign email send skipped because email/entity id is missing."
             );
+
+            return;
+        }
+
+        CampaignEmail managed =
+                campaignEmailRepository
+                        .findById(
+                                campaignEmail.getId()
+                        )
+                        .orElseThrow(() ->
+                                new IllegalStateException(
+                                        "Campaign email not found: "
+                                                + campaignEmail.getId()
+                                )
+                        );
+
+        /*
+         * SENT means this email has already been accepted by the provider.
+         * Never send it again.
+         */
+        if (managed.getStatus()
+                == CampaignEmailStatus.SENT) {
+
+            log.debug(
+                    "Campaign email already sent. emailId={}",
+                    managed.getId()
+            );
+
+            return;
+        }
+
+        /*
+         * Only QUEUED and legacy FAILED rows are eligible for the
+         * Brevo recovery/delivery process.
+         */
+        if (managed.getStatus()
+                != CampaignEmailStatus.QUEUED
+                && managed.getStatus()
+                != CampaignEmailStatus.FAILED) {
+
+            log.debug(
+                    "Campaign email send skipped because status is not deliverable. " +
+                            "emailId={}, status={}",
+                    managed.getId(),
+                    managed.getStatus()
+            );
+
             return;
         }
 
         try {
 
-            CampaignEmail managed =
-                    campaignEmailRepository
-                            .findById(campaignEmail.getId())
-                            .orElseThrow(() ->
-                                    new IllegalStateException(
-                                            "Campaign email not found: "
-                                                    + campaignEmail.getId()
-                                    )
-                            );
-
-            /*
-             * Only QUEUED emails are allowed to reach the provider.
-             *
-             * This prevents accidental duplicate provider sends when
-             * an async invocation or manual retry reaches an already
-             * processed email row.
-             */
-            if (managed.getStatus()
-                    != com.adrovis.adrovis_backend.campaign.enums.CampaignEmailStatus.QUEUED) {
-
-                log.debug(
-                        "Campaign email send skipped because status is not QUEUED. " +
-                                "emailId={}, status={}",
-                        managed.getId(),
-                        managed.getStatus()
-                );
-
-                return;
-            }
-
             String html =
                     buildHtml(managed);
 
-            Resend resend =
-                    new Resend(
-                            mailProperties.getApiKey()
+            String messageId =
+                    sendEmailToBrevo(
+                            managed,
+                            html
                     );
 
-            var request =
-                    com.resend.services.emails.model.SendEmailRequest
-                            .builder()
-                            .from(
-                                    "Adrovis <"
-                                            + mailProperties.getFrom()
-                                            + ">"
-                            )
-                            .to(
-                                    managed.getToEmail()
-                            )
-                            .subject(
-                                    managed.getSubject()
-                            )
-                            .html(
-                                    html
-                            )
-                            .replyTo(
-                                    campaignProperties.getReplyToEmail()
-                            )
-                            .build();
-
-            var response =
-                    resend.emails().send(request);
-
             managed.markSent(
-                    response.getId()
+                    messageId
             );
 
             campaignEmailRepository.save(
@@ -131,67 +151,268 @@ public class CampaignEmailServiceImpl
             );
 
             log.info(
-                    "Campaign email sent successfully. " +
+                    "Campaign email sent successfully through Brevo. " +
                             "campaignId={}, emailId={}, candidateId={}, " +
-                            "week={}, journeyType={}, journeyVersion={}, providerId={}",
+                            "week={}, journeyType={}, journeyVersion={}, brevoMessageId={}",
                     managed.getCampaign().getId(),
                     managed.getId(),
                     managed.getCandidateId(),
                     managed.getWeekNumber(),
                     managed.getCampaignRecipient().getJourneyType(),
                     managed.getJourneyVersion(),
-                    response.getId()
+                    messageId
             );
 
         } catch (Exception ex) {
 
-            try {
-
-                CampaignEmail managed =
-                        campaignEmailRepository
-                                .findById(
-                                        campaignEmail.getId()
-                                )
-                                .orElse(null);
-
-                if (managed != null) {
-
-                    managed.markFailed(
-                            safeMessage(ex)
-                    );
-
-                    campaignEmailRepository.save(
-                            managed
-                    );
-                }
-
-            } catch (RuntimeException saveException) {
-
-                log.error(
-                        "Failed to persist campaign email failure. emailId={}",
-                        campaignEmail.getId(),
-                        saveException
-                );
-            }
-
+            /*
+             * IMPORTANT:
+             *
+             * Do NOT call markFailed().
+             *
+             * New Brevo/provider failures must remain retryable.
+             *
+             * If this row was an old FAILED row, it will remain FAILED.
+             * The delivery scheduler intentionally includes FAILED rows,
+             * so it will still be retried on the next delivery pass.
+             *
+             * If this row was QUEUED, it remains QUEUED.
+             */
             log.error(
-                    "Campaign email failed. emailId={}, recipient={}",
-                    campaignEmail.getId(),
-                    campaignEmail.getToEmail(),
+                    "Campaign email could not be sent through Brevo. " +
+                            "It will remain retryable. emailId={}, recipient={}, status={}",
+                    managed.getId(),
+                    managed.getToEmail(),
+                    managed.getStatus(),
+                    ex
+            );
+
+            throw new CampaignEmailDeliveryException(
+                    "Brevo campaign email delivery failed.",
                     ex
             );
         }
     }
 
     /**
+     * Calls Brevo's transactional email API.
+     *
+     * POST https://api.brevo.com/v3/smtp/email
+     */
+    private String sendEmailToBrevo(
+            CampaignEmail email,
+            String html
+    ) throws IOException, InterruptedException {
+
+        String apiKey =
+                campaignProperties.getBrevoApiKey();
+
+        if (apiKey == null
+                || apiKey.isBlank()) {
+
+            throw new IllegalStateException(
+                    "Brevo API key is not configured."
+            );
+        }
+
+        String senderEmail =
+                campaignProperties.getBrevoSenderEmail();
+
+        if (senderEmail == null
+                || senderEmail.isBlank()) {
+
+            throw new IllegalStateException(
+                    "Brevo sender email is not configured."
+            );
+        }
+
+        String senderName =
+                campaignProperties.getBrevoSenderName();
+
+        String replyToEmail =
+                campaignProperties.getReplyToEmail();
+
+        String requestBody =
+                buildBrevoRequestBody(
+                        email,
+                        html,
+                        senderEmail,
+                        senderName,
+                        replyToEmail
+                );
+
+        HttpRequest request =
+                HttpRequest.newBuilder()
+                        .uri(
+                                URI.create(
+                                        BREVO_SEND_URL
+                                )
+                        )
+                        .header(
+                                "accept",
+                                "application/json"
+                        )
+                        .header(
+                                "api-key",
+                                apiKey
+                        )
+                        .header(
+                                "content-type",
+                                "application/json"
+                        )
+                        .POST(
+                                HttpRequest.BodyPublishers.ofString(
+                                        requestBody,
+                                        StandardCharsets.UTF_8
+                                )
+                        )
+                        .build();
+
+        HttpResponse<String> response =
+                httpClient.send(
+                        request,
+                        HttpResponse.BodyHandlers.ofString(
+                                StandardCharsets.UTF_8
+                        )
+                );
+
+        int statusCode =
+                response.statusCode();
+
+        String responseBody =
+                response.body();
+
+        if (statusCode < 200
+                || statusCode >= 300) {
+
+            throw new IllegalStateException(
+                    "Brevo API returned HTTP "
+                            + statusCode
+                            + ": "
+                            + safeResponse(
+                            responseBody
+                    )
+            );
+        }
+
+        JsonNode responseJson =
+                objectMapper.readTree(
+                        responseBody
+                );
+
+        JsonNode messageIdNode =
+                responseJson.get(
+                        "messageId"
+                );
+
+        if (messageIdNode == null
+                || messageIdNode.isNull()
+                || messageIdNode.asText().isBlank()) {
+
+            throw new IllegalStateException(
+                    "Brevo API returned success but no messageId. " +
+                            "Response: "
+                            + safeResponse(responseBody)
+            );
+        }
+
+        return messageIdNode.asText();
+    }
+
+    private String buildBrevoRequestBody(
+            CampaignEmail email,
+            String html,
+            String senderEmail,
+            String senderName,
+            String replyToEmail
+    ) throws IOException {
+
+        var root =
+                objectMapper.createObjectNode();
+
+        var sender =
+                root.putObject(
+                        "sender"
+                );
+
+        sender.put(
+                "email",
+                senderEmail
+        );
+
+        if (senderName != null
+                && !senderName.isBlank()) {
+
+            sender.put(
+                    "name",
+                    senderName
+            );
+        }
+
+        var toArray =
+                root.putArray(
+                        "to"
+                );
+
+        var recipient =
+                toArray.addObject();
+
+        recipient.put(
+                "email",
+                email.getToEmail()
+        );
+
+        root.put(
+                "subject",
+                email.getSubject()
+        );
+
+        root.put(
+                "htmlContent",
+                html
+        );
+
+        if (replyToEmail != null
+                && !replyToEmail.isBlank()) {
+
+            var replyTo =
+                    root.putObject(
+                            "replyTo"
+                    );
+
+            replyTo.put(
+                    "email",
+                    replyToEmail
+            );
+        }
+
+        return objectMapper.writeValueAsString(
+                root
+        );
+    }
+
+    private String safeResponse(
+            String response
+    ) {
+
+        if (response == null
+                || response.isBlank()) {
+
+            return "empty response";
+        }
+
+        return response.length() > 2000
+                ? response.substring(
+                0,
+                2000
+        )
+                : response;
+    }
+
+    /**
      * Selects the physical HTML template using the explicit journey type.
      *
-     * IMPORTANT:
-     *
      * Do NOT infer journey type from applicationId.
-     *
-     * A candidate's application state and campaign journey state are
-     * separate concepts. CampaignRecipient.journeyType is authoritative.
      */
     private String buildHtml(
             CampaignEmail email
@@ -227,20 +448,6 @@ public class CampaignEmailServiceImpl
         };
     }
 
-    /**
-     * Outreach follow-up emails intentionally use a completely separate
-     * template.
-     *
-     * This template contains:
-     *
-     * - no fee placeholder
-     * - no application reference
-     * - no program snapshot
-     * - no application-status block
-     *
-     * Therefore a fee cannot leak into an outreach email even if the
-     * Campaign entity contains a fee snapshot.
-     */
     private String buildOutreachHtml(
             CampaignEmail email
     ) throws IOException {
@@ -284,15 +491,6 @@ public class CampaignEmailServiceImpl
                         ctaLabel
                 );
 
-        /*
-         * NOTE:
-         *
-         * There is intentionally no fee formatting here.
-         * There is intentionally no campaign snapshot replacement here.
-         *
-         * This method cannot inject ₹499 because the outreach template
-         * does not have fee/program-snapshot placeholders.
-         */
         return html
 
                 .replace(
@@ -340,17 +538,6 @@ public class CampaignEmailServiceImpl
                         ));
     }
 
-    /**
-     * Application follow-up emails continue to use the existing
-     * application campaign template.
-     *
-     * This is the ONLY journey allowed to render:
-     *
-     * - fee
-     * - application reference
-     * - application-specific CTA
-     * - program snapshot
-     */
     private String buildApplicationHtml(
             CampaignEmail email
     ) throws IOException {
@@ -735,20 +922,6 @@ public class CampaignEmailServiceImpl
             String fee
     ) {
 
-        /*
-         * The campaign journey remains responsible for deciding WHEN an email
-         * is sent. This method only decides the copy shown for the current
-         * application journey week and current application state.
-         *
-         * PENDING:
-         *   - asks the candidate to continue the existing application
-         *
-         * SUBMITTED:
-         *   - asks the candidate to confirm continued interest
-         *
-         * The CTA itself is still resolved by resolveApplicationCtaLabel().
-         * No campaign scheduling/business-state logic is changed here.
-         */
         boolean submitted =
                 email.getCampaignRecipient() != null
                         && "APPLICATION_SUBMITTED".equals(
@@ -758,9 +931,8 @@ public class CampaignEmailServiceImpl
                         )
                 );
 
-        String safeFee = escape(fee);
-
         if (submitted) {
+
             return switch (email.getEmailType()) {
 
                 case WEEK_1_REENGAGEMENT -> """
@@ -903,13 +1075,6 @@ public class CampaignEmailServiceImpl
         };
     }
 
-    /**
-     * Outreach copy for the four weekly follow-ups.
-     *
-     * IMPORTANT:
-     * No fee, registration charge, application reference, or application
-     * status is included in outreach content.
-     */
     private OutreachContent outreachContent(
             int week
     ) {
@@ -1037,6 +1202,7 @@ public class CampaignEmailServiceImpl
         }
 
         if (normalizedCurrency.isBlank()) {
+
             return formattedAmount;
         }
 
@@ -1064,36 +1230,33 @@ public class CampaignEmailServiceImpl
     private String escapeAttribute(
             String value
     ) {
+
         return escape(value);
-    }
-
-    private String safeMessage(
-            Throwable throwable
-    ) {
-
-        if (throwable == null) {
-            return "Unknown campaign email error.";
-        }
-
-        String message =
-                throwable.getMessage();
-
-        if (message == null
-                || message.isBlank()) {
-
-            return throwable
-                    .getClass()
-                    .getSimpleName();
-        }
-
-        return message.length() > 2000
-                ? message.substring(0, 2000)
-                : message;
     }
 
     private record OutreachContent(
             String headline,
             String body
     ) {
+    }
+
+    /**
+     * Runtime exception used specifically for Brevo campaign delivery.
+     *
+     * The delivery scheduler catches this exception and moves on to the
+     * next queued email. The database row remains retryable.
+     */
+    private static class CampaignEmailDeliveryException
+            extends RuntimeException {
+
+        public CampaignEmailDeliveryException(
+                String message,
+                Throwable cause
+        ) {
+            super(
+                    message,
+                    cause
+            );
+        }
     }
 }

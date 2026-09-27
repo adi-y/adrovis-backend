@@ -54,6 +54,20 @@ app:
     timezone: ${CAMPAIGN_TIMEZONE:Asia/Kolkata}
     batch-size: ${CAMPAIGN_BATCH_SIZE:500}
 
+    # BREVO CAMPAIGN DELIVERY
+    brevo-api-key: ${BREVO_API_KEY}
+    brevo-sender-email: ${BREVO_SENDER_EMAIL:hello@adrovis.com}
+    brevo-sender-name: ${BREVO_SENDER_NAME:Adrovis}
+
+    # Maximum campaign emails allowed through this application per day
+    brevo-daily-quota: ${BREVO_DAILY_QUOTA:300}
+
+    # Maximum emails selected in one delivery pass
+    brevo-delivery-batch-size: ${BREVO_DELIVERY_BATCH_SIZE:300}
+
+    # Check queue every hour
+    brevo-delivery-scheduler-delay-ms: ${BREVO_DELIVERY_SCHEDULER_DELAY_MS:3600000}
+
   gemini:
     api-key: ${GEMINI_API_KEY}
     model: ${GEMINI_MODEL:gemini-3.6-flash}
