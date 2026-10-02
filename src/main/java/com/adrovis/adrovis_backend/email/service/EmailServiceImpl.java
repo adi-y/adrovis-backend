@@ -9,6 +9,7 @@ import com.adrovis.adrovis_backend.career.repository.CandidateOutreachRepository
 import com.adrovis.adrovis_backend.email.config.MailProperties;
 import com.adrovis.adrovis_backend.interview.entity.Interview;
 import com.adrovis.adrovis_backend.payment.entity.PaymentTransaction;
+import com.adrovis.adrovis_backend.unpaidinternship.entity.UnpaidInternshipApplication;
 import com.resend.Resend;
 import com.resend.core.exception.ResendException;
 import com.resend.services.emails.model.SendEmailRequest;
@@ -206,6 +207,64 @@ public class EmailServiceImpl implements EmailService {
             );
         }
     }
+
+    @Async("emailTaskExecutor")
+    @Override
+    public void sendUnpaidInternshipApplicationReceivedEmailAsync(
+            UnpaidInternshipApplication application
+    ) {
+
+        try {
+
+            String html =
+                    buildApplicationReceivedTemplate(
+                            application.getFullName(),
+                            application.getApplicationId()
+                    );
+
+            Resend resend =
+                    new Resend(
+                            mailProperties.getApiKey()
+                    );
+
+            SendEmailRequest request =
+                    SendEmailRequest.builder()
+                            .from(
+                                    "Adrovis <"
+                                            + mailProperties.getFrom()
+                                            + ">"
+                            )
+                            .to(application.getEmail())
+                            .subject(
+                                    "Application Received - Adrovis"
+                            )
+                            .html(html)
+                            .build();
+
+            var response =
+                    resend.emails().send(request);
+
+            log.info(
+                    "Unpaid internship application confirmation email sent. " +
+                            "recipient={}, applicationId={}, resendId={}",
+                    application.getEmail(),
+                    application.getApplicationId(),
+                    response.getId()
+            );
+
+        } catch (ResendException | IOException ex) {
+
+            log.error(
+                    "Failed to send unpaid internship application confirmation email. " +
+                            "recipient={}, applicationId={}",
+                    application.getEmail(),
+                    application.getApplicationId(),
+                    ex
+            );
+        }
+    }
+
+
     private String buildPaymentLinkTemplate(
             Application application,
             PaymentTransaction payment
@@ -727,6 +786,27 @@ public class EmailServiceImpl implements EmailService {
                 .replace("{{program}}", application.getJobTitleSnapshot());
     }
 
+    private String buildApplicationReceivedTemplate(
+            String name,
+            String applicationId
+    ) throws IOException {
+
+        ClassPathResource resource =
+                new ClassPathResource("email/ApplicationReceivedEmail.html");
+
+        String html = new String(
+                resource.getInputStream().readAllBytes(),
+                StandardCharsets.UTF_8
+        );
+
+        return html
+                .replace("{{name}}", name)
+                .replace("{{applicationId}}", applicationId)
+                .replace(
+                        "{{program}}",
+                        "Software Developer Internship"
+                );
+    }
     private String buildInternshipApplicationDetailsTemplate(
             Application application
     ) throws IOException {

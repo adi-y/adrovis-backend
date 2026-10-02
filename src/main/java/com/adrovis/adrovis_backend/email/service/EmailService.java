@@ -4,6 +4,7 @@ import com.adrovis.adrovis_backend.career.entity.Application;
 import com.adrovis.adrovis_backend.interview.entity.Interview;
 import com.adrovis.adrovis_backend.payment.entity.PaymentTransaction;
 import com.adrovis.adrovis_backend.career.entity.CandidateOutreach;
+import com.adrovis.adrovis_backend.unpaidinternship.entity.UnpaidInternshipApplication;
 
 public interface EmailService {
 
@@ -39,6 +40,9 @@ public interface EmailService {
 
     void sendCandidateOutreachEmailAsync(
             CandidateOutreach candidate
+    );
+    void sendUnpaidInternshipApplicationReceivedEmailAsync(
+            UnpaidInternshipApplication application
     );
 
 }

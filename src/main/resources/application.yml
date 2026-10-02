@@ -44,3 +44,9 @@ security:
   admin:
     email: ${ADMIN_EMAIL}
     password: ${ADMIN_PASSWORD}
+
+unpaid-internship:
+  storage:
+    url: ${UNPAID_INTERNSHIP_SUPABASE_URL}
+    service-key: ${UNPAID_INTERNSHIP_SUPABASE_SERVICE_KEY}
+    bucket: ${UNPAID_INTERNSHIP_SUPABASE_BUCKET:unpaid-internship-resumes}
